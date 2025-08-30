@@ -21,7 +21,7 @@ class ItemFactory extends Factory
     {
         $categories = ['Electronics', 'Furniture', 'Tools', 'Vehicles', 'Equipment'];
         $brands = ['Dell', 'HP', 'Apple', 'Samsung', 'Sony', 'Lenovo', 'IKEA', 'Steelcase'];
-        
+
         return [
             'name' => $this->faker->words(3, true),
             'category' => $this->faker->randomElement($categories),
@@ -42,7 +42,7 @@ class ItemFactory extends Factory
      */
     public function available()
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn(array $attributes) => [
             'status' => 'available',
             'quantity' => $this->faker->numberBetween(1, 10),
         ]);
@@ -53,7 +53,7 @@ class ItemFactory extends Factory
      */
     public function unavailable()
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn(array $attributes) => [
             'status' => 'not_available',
         ]);
     }
@@ -63,7 +63,7 @@ class ItemFactory extends Factory
      */
     public function maintenance()
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn(array $attributes) => [
             'status' => 'not_available',
         ]);
     }
@@ -73,7 +73,7 @@ class ItemFactory extends Factory
      */
     public function category(string $category)
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn(array $attributes) => [
             'category' => $category,
         ]);
     }
@@ -83,7 +83,7 @@ class ItemFactory extends Factory
      */
     public function lowStock()
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn(array $attributes) => [
             'quantity' => $this->faker->numberBetween(1, 2),
             'status' => 'available',
         ]);
@@ -94,7 +94,7 @@ class ItemFactory extends Factory
      */
     public function outOfStock()
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn(array $attributes) => [
             'quantity' => 0,
             'status' => 'available',
         ]);

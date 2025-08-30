@@ -20,7 +20,7 @@ class RequestModelTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         $this->user = User::factory()->create(['role' => 'user']);
         $this->admin = User::factory()->create(['role' => 'admin']);
         $this->item = Item::factory()->create([
@@ -33,7 +33,7 @@ class RequestModelTest extends TestCase
     public function test_request_belongs_to_user()
     {
         $request = Request::factory()->forUser($this->user)->create();
-        
+
         $this->assertInstanceOf(User::class, $request->user);
         $this->assertEquals($this->user->id, $request->user->id);
     }
@@ -41,7 +41,7 @@ class RequestModelTest extends TestCase
     public function test_request_belongs_to_item_when_existing()
     {
         $request = Request::factory()->forItem($this->item)->create();
-        
+
         $this->assertInstanceOf(Item::class, $request->item);
         $this->assertEquals($this->item->id, $request->item->id);
     }
@@ -49,7 +49,7 @@ class RequestModelTest extends TestCase
     public function test_request_has_no_item_when_new_item_type()
     {
         $request = Request::factory()->newItem()->create();
-        
+
         $this->assertNull($request->item);
         $this->assertNotNull($request->item_name);
         $this->assertNotNull($request->item_category);
@@ -61,17 +61,17 @@ class RequestModelTest extends TestCase
         $pendingRequest = Request::factory()->pending()->create();
         $approvedRequest = Request::factory()->approved()->create();
         $rejectedRequest = Request::factory()->rejected()->create();
-        
+
         // Test pending scope
         $pendingRequests = Request::pending()->get();
         $this->assertTrue($pendingRequests->contains($pendingRequest));
         $this->assertFalse($pendingRequests->contains($approvedRequest));
-        
+
         // Test approved scope
         $approvedRequests = Request::approved()->get();
         $this->assertTrue($approvedRequests->contains($approvedRequest));
         $this->assertFalse($approvedRequests->contains($pendingRequest));
-        
+
         // Test rejected scope
         $rejectedRequests = Request::rejected()->get();
         $this->assertTrue($rejectedRequests->contains($rejectedRequest));
@@ -81,19 +81,19 @@ class RequestModelTest extends TestCase
     public function test_request_status_transitions()
     {
         $request = Request::factory()->pending()->create();
-        
+
         $this->assertEquals('pending', $request->status);
-        
+
         // Approve request
         $request->status = 'approved';
         $request->save();
-        
+
         $this->assertEquals('approved', $request->status);
-        
+
         // Return item
         $request->status = 'returned';
         $request->save();
-        
+
         $this->assertEquals('returned', $request->status);
     }
 
@@ -103,7 +103,7 @@ class RequestModelTest extends TestCase
             'start_date' => Carbon::today()->format('Y-m-d'),
             'end_date' => Carbon::today()->addDays(7)->format('Y-m-d')
         ]);
-        
+
         $this->assertInstanceOf(Carbon::class, $request->start_date);
         $this->assertInstanceOf(Carbon::class, $request->end_date);
         $this->assertTrue($request->end_date->gt($request->start_date));
@@ -114,7 +114,7 @@ class RequestModelTest extends TestCase
         $highPriorityRequest = Request::factory()->priority('high')->create();
         $mediumPriorityRequest = Request::factory()->priority('medium')->create();
         $lowPriorityRequest = Request::factory()->priority('low')->create();
-        
+
         $this->assertEquals('high', $highPriorityRequest->priority);
         $this->assertEquals('medium', $mediumPriorityRequest->priority);
         $this->assertEquals('low', $lowPriorityRequest->priority);
@@ -123,7 +123,7 @@ class RequestModelTest extends TestCase
     public function test_request_quantity_requested()
     {
         $request = Request::factory()->quantity(3)->create();
-        
+
         $this->assertEquals(3, $request->quantity_requested);
         $this->assertIsInt($request->quantity_requested);
     }
@@ -132,9 +132,9 @@ class RequestModelTest extends TestCase
     {
         $startDate = '2024-01-01';
         $endDate = '2024-01-07';
-        
+
         $request = Request::factory()->dates($startDate, $endDate)->create();
-        
+
         $this->assertEquals($startDate, $request->start_date->format('Y-m-d'));
         $this->assertEquals($endDate, $request->end_date->format('Y-m-d'));
     }
@@ -143,7 +143,7 @@ class RequestModelTest extends TestCase
     {
         $notes = 'Special handling required for this request';
         $request = Request::factory()->create(['notes' => $notes]);
-        
+
         $this->assertEquals($notes, $request->notes);
     }
 
@@ -153,7 +153,7 @@ class RequestModelTest extends TestCase
         $request = Request::factory()->rejected()->create([
             'rejection_reason' => $rejectionReason
         ]);
-        
+
         $this->assertEquals('rejected', $request->status);
         $this->assertEquals($rejectionReason, $request->rejection_reason);
     }
@@ -162,10 +162,10 @@ class RequestModelTest extends TestCase
     {
         $existingItemRequest = Request::factory()->existingItem()->create();
         $newItemRequest = Request::factory()->newItem()->create();
-        
+
         $this->assertEquals('existing_item', $existingItemRequest->request_type);
         $this->assertNotNull($existingItemRequest->item_id);
-        
+
         $this->assertEquals('purchase_request', $newItemRequest->request_type);
         $this->assertNull($newItemRequest->item_id);
         $this->assertNotNull($newItemRequest->item_name);
@@ -174,7 +174,7 @@ class RequestModelTest extends TestCase
     public function test_request_timestamps_are_set()
     {
         $request = Request::factory()->create();
-        
+
         $this->assertNotNull($request->created_at);
         $this->assertNotNull($request->updated_at);
         $this->assertInstanceOf(Carbon::class, $request->created_at);
@@ -185,11 +185,11 @@ class RequestModelTest extends TestCase
     {
         $user1Requests = Request::factory()->count(3)->forUser($this->user)->create();
         $user2Requests = Request::factory()->count(2)->create();
-        
+
         $userRequests = Request::where('user_id', $this->user->id)->get();
-        
+
         $this->assertEquals(3, $userRequests->count());
-        
+
         foreach ($user1Requests as $request) {
             $this->assertTrue($userRequests->contains($request));
         }
@@ -199,11 +199,11 @@ class RequestModelTest extends TestCase
     {
         $item1Requests = Request::factory()->count(2)->forItem($this->item)->create();
         $otherRequests = Request::factory()->count(3)->create();
-        
+
         $itemRequests = Request::where('item_id', $this->item->id)->get();
-        
+
         $this->assertEquals(2, $itemRequests->count());
-        
+
         foreach ($item1Requests as $request) {
             $this->assertTrue($itemRequests->contains($request));
         }
@@ -212,7 +212,7 @@ class RequestModelTest extends TestCase
     public function test_request_factory_creates_realistic_data()
     {
         $request = Request::factory()->create();
-        
+
         // Verifica che i dati generati siano realistici
         $this->assertNotEmpty($request->reason);
         $this->assertContains($request->status, ['pending', 'approved', 'rejected', 'in_use', 'returned', 'overdue']);

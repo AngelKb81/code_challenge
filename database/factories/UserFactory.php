@@ -48,7 +48,7 @@ class UserFactory extends Factory
      */
     public function admin()
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn(array $attributes) => [
             'role' => 'admin',
         ]);
     }
@@ -58,7 +58,7 @@ class UserFactory extends Factory
      */
     public function user()
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn(array $attributes) => [
             'role' => 'user',
         ]);
     }

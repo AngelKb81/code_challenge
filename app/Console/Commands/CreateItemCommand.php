@@ -39,7 +39,7 @@ class CreateItemCommand extends Command
 
         // Validazione e raccolta parametri
         $data = $this->gatherItemData();
-        
+
         if (!$data) {
             return Command::FAILURE;
         }
@@ -53,7 +53,7 @@ class CreateItemCommand extends Command
         // Creazione item
         try {
             $item = Item::create($data);
-            
+
             $this->info('');
             $this->info('✅ Item created successfully!');
             $this->table(
@@ -69,9 +69,8 @@ class CreateItemCommand extends Command
                     ['Created', $item->created_at->format('Y-m-d H:i:s')]
                 ]
             );
-            
+
             return Command::SUCCESS;
-            
         } catch (\Exception $e) {
             $this->error('❌ Error creating item: ' . $e->getMessage());
             return Command::FAILURE;
@@ -109,14 +108,14 @@ class CreateItemCommand extends Command
 
         // Brand (opzionale)
         $data['brand'] = $this->option('brand') ?: $this->ask('Brand (optional)', '');
-        
+
         // Description (opzionale)
         $data['description'] = $this->option('description') ?: $this->ask('Description (optional)', '');
-        
+
         // Status
         $status = $this->option('status') ?: $this->choice(
-            'Item status', 
-            ['available', 'maintenance', 'retired'], 
+            'Item status',
+            ['available', 'maintenance', 'retired'],
             'available'
         );
         $data['status'] = $status;
@@ -181,7 +180,7 @@ class CreateItemCommand extends Command
         $categoryPrefix = strtoupper(substr(preg_replace('/[^A-Za-z0-9]/', '', $category), 0, 3));
         $timestamp = \Carbon\Carbon::now()->format('ymd');
         $random = strtoupper(Str::random(3));
-        
+
         return "{$categoryPrefix}-{$namePrefix}-{$timestamp}-{$random}";
     }
 }

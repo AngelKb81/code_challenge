@@ -20,7 +20,7 @@ class WarehouseWorkflowTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         // Crea utenti di test
         $this->admin = User::factory()->create(['role' => 'admin']);
         $this->user = User::factory()->create(['role' => 'user']);
@@ -44,7 +44,7 @@ class WarehouseWorkflowTest extends TestCase
 
         $response->assertRedirect();
         $response->assertSessionHas('success');
-        
+
         $this->assertDatabaseHas('items', [
             'name' => 'Test Laptop',
             'category' => 'Electronics',
@@ -84,7 +84,8 @@ class WarehouseWorkflowTest extends TestCase
 
         $response = $this->get(route('warehouse.items'));
 
-        $response->assertInertia(fn (Assert $page) =>
+        $response->assertInertia(
+            fn(Assert $page) =>
             $page->component('Warehouse/Items')
                 ->has('items.data')
         );
@@ -114,7 +115,7 @@ class WarehouseWorkflowTest extends TestCase
 
         $response->assertRedirect();
         $response->assertSessionHas('success');
-        
+
         $this->assertDatabaseHas('requests', [
             'user_id' => $this->user->id,
             'item_id' => $item->id,
@@ -143,7 +144,7 @@ class WarehouseWorkflowTest extends TestCase
 
         $response->assertRedirect();
         $response->assertSessionHas('success');
-        
+
         $this->assertDatabaseHas('requests', [
             'user_id' => $this->user->id,
             'item_name' => 'New Test Item',
@@ -173,7 +174,7 @@ class WarehouseWorkflowTest extends TestCase
 
         $response->assertRedirect();
         $response->assertSessionHas('success');
-        
+
         $request->refresh();
         $this->assertEquals('approved', $request->status);
         $this->assertEquals($this->admin->id, $request->admin_id);
@@ -198,11 +199,11 @@ class WarehouseWorkflowTest extends TestCase
 
         $response->assertRedirect();
         $response->assertSessionHas('success');
-        
+
         $request->refresh();
         $this->assertEquals('approved', $request->status);
         $this->assertNotNull($request->item_id);
-        
+
         // Verifica che l'item sia stato creato
         $this->assertDatabaseHas('items', [
             'name' => 'New Test Item',
@@ -228,7 +229,7 @@ class WarehouseWorkflowTest extends TestCase
 
         $response->assertRedirect();
         $response->assertSessionHas('success');
-        
+
         $request->refresh();
         $this->assertEquals('rejected', $request->status);
         $this->assertEquals('Not available for this period', $request->rejection_reason);
@@ -308,7 +309,7 @@ class WarehouseWorkflowTest extends TestCase
             'available' => false,
             'item_name' => $item->name
         ]);
-        
+
         $responseData = $response->json();
         $this->assertArrayHasKey('conflicting_requests', $responseData);
     }
@@ -328,7 +329,7 @@ class WarehouseWorkflowTest extends TestCase
 
         $response->assertRedirect();
         $response->assertSessionHas('success');
-        
+
         $request->refresh();
         $this->assertEquals('returned', $request->status);
     }
@@ -363,7 +364,8 @@ class WarehouseWorkflowTest extends TestCase
 
         $response = $this->get(route('warehouse.dashboard'));
 
-        $response->assertInertia(fn (Assert $page) =>
+        $response->assertInertia(
+            fn(Assert $page) =>
             $page->component('Warehouse/Dashboard')
                 ->has('stats')
                 ->where('stats.total_items', 7)
@@ -391,13 +393,15 @@ class WarehouseWorkflowTest extends TestCase
 
         // Test search by name
         $response = $this->get(route('warehouse.items', ['search' => 'Laptop']));
-        $response->assertInertia(fn (Assert $page) =>
+        $response->assertInertia(
+            fn(Assert $page) =>
             $page->has('items.data', 1)
         );
 
         // Test filter by category
         $response = $this->get(route('warehouse.items', ['category' => 'Electronics']));
-        $response->assertInertia(fn (Assert $page) =>
+        $response->assertInertia(
+            fn(Assert $page) =>
             $page->has('items.data', 1)
         );
     }

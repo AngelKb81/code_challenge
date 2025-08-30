@@ -26,7 +26,7 @@ class RequestFactory extends Factory
         $requestType = $this->faker->randomElement($requestTypes);
         $statuses = ['pending', 'approved', 'rejected', 'in_use', 'returned', 'overdue'];
         $priorities = ['low', 'medium', 'high', 'urgent'];
-        
+
         $startDate = $this->faker->dateTimeBetween('now', '+30 days');
         $endDate = $this->faker->dateTimeBetween($startDate, '+60 days');
 
@@ -48,7 +48,7 @@ class RequestFactory extends Factory
             // purchase_request
             $categories = ['Electronics', 'Furniture', 'Tools', 'Vehicles', 'Equipment'];
             $brands = ['Dell', 'HP', 'Apple', 'Samsung', 'Sony', 'Lenovo', 'IKEA', 'Steelcase'];
-            
+
             $baseData['item_name'] = $this->faker->words(3, true);
             $baseData['item_category'] = $this->faker->randomElement($categories);
             $baseData['item_brand'] = $this->faker->optional(0.8)->randomElement($brands);
@@ -63,7 +63,7 @@ class RequestFactory extends Factory
      */
     public function pending()
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn(array $attributes) => [
             'status' => 'pending',
             'admin_id' => null,
             'rejection_reason' => null,
@@ -75,7 +75,7 @@ class RequestFactory extends Factory
      */
     public function approved()
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn(array $attributes) => [
             'status' => 'approved',
         ]);
     }
@@ -85,7 +85,7 @@ class RequestFactory extends Factory
      */
     public function rejected()
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn(array $attributes) => [
             'status' => 'rejected',
             'rejection_reason' => $this->faker->sentence(),
         ]);
@@ -96,7 +96,7 @@ class RequestFactory extends Factory
      */
     public function returned()
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn(array $attributes) => [
             'status' => 'returned',
         ]);
     }
@@ -106,7 +106,7 @@ class RequestFactory extends Factory
      */
     public function existingItem()
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn(array $attributes) => [
             'request_type' => 'existing_item',
             'item_id' => Item::factory(),
             'item_name' => null,
@@ -123,8 +123,8 @@ class RequestFactory extends Factory
     {
         $categories = ['Electronics', 'Furniture', 'Tools', 'Vehicles', 'Equipment'];
         $brands = ['Dell', 'HP', 'Apple', 'Samsung', 'Sony', 'Lenovo', 'IKEA', 'Steelcase'];
-        
-        return $this->state(fn (array $attributes) => [
+
+        return $this->state(fn(array $attributes) => [
             'request_type' => 'purchase_request',
             'item_id' => null,
             'item_name' => $this->faker->words(3, true),
@@ -139,7 +139,7 @@ class RequestFactory extends Factory
      */
     public function priority(string $priority)
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn(array $attributes) => [
             'priority' => $priority,
         ]);
     }
@@ -149,7 +149,7 @@ class RequestFactory extends Factory
      */
     public function dates(string $startDate, string $endDate)
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn(array $attributes) => [
             'start_date' => $startDate,
             'end_date' => $endDate,
         ]);
@@ -160,7 +160,7 @@ class RequestFactory extends Factory
      */
     public function quantity(int $quantity)
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn(array $attributes) => [
             'quantity_requested' => $quantity,
         ]);
     }
@@ -170,7 +170,7 @@ class RequestFactory extends Factory
      */
     public function forUser(User $user)
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn(array $attributes) => [
             'user_id' => $user->id,
         ]);
     }
@@ -180,7 +180,7 @@ class RequestFactory extends Factory
      */
     public function forItem(Item $item)
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn(array $attributes) => [
             'request_type' => 'existing_item',
             'item_id' => $item->id,
             'item_name' => null,

@@ -24,11 +24,11 @@ class RequestApprovalServiceTest extends TestCase
     {
         parent::setUp();
         $this->service = new RequestApprovalService();
-        
+
         // Crea admin e user di test
         $this->admin = User::factory()->create(['role' => 'admin']);
         $this->user = User::factory()->create(['role' => 'user']);
-        
+
         // Crea item di test
         $this->item = Item::factory()->create([
             'name' => 'Test Item',
@@ -51,7 +51,7 @@ class RequestApprovalServiceTest extends TestCase
 
         $this->assertTrue($result['success']);
         $this->assertStringContainsString('approvata', $result['message']);
-        
+
         $request->refresh();
         $this->assertEquals('approved', $request->status);
         $this->assertEquals($this->admin->id, $request->admin_id);
@@ -72,7 +72,7 @@ class RequestApprovalServiceTest extends TestCase
 
         $this->assertFalse($result['success']);
         $this->assertStringContainsString('Quantità richiesta non disponibile', $result['message']);
-        
+
         $request->refresh();
         $this->assertEquals('pending', $request->status);
     }
@@ -95,14 +95,14 @@ class RequestApprovalServiceTest extends TestCase
         $this->assertTrue($result['success']);
         $this->assertStringContainsString('approvata', $result['message']);
         $this->assertArrayHasKey('created_item', $result);
-        
+
         // Verifica che il nuovo item sia stato creato
         $newItem = $result['created_item'];
         $this->assertInstanceOf(Item::class, $newItem);
         $this->assertEquals('New Test Item', $newItem->name);
         $this->assertEquals('Electronics', $newItem->category);
         $this->assertEquals(2, $newItem->quantity);
-        
+
         $request->refresh();
         $this->assertEquals('approved', $request->status);
         $this->assertEquals($newItem->id, $request->item_id);
@@ -272,7 +272,7 @@ class RequestApprovalServiceTest extends TestCase
         $result = $this->service->approveRequest($request, $this->admin->id);
 
         $this->assertTrue($result['success']);
-        
+
         $newItem = $result['created_item'];
         $this->assertNotEmpty($newItem->serial_number);
         $this->assertStringStartsWith('ELE-', $newItem->serial_number);
@@ -313,7 +313,7 @@ class RequestApprovalServiceTest extends TestCase
 
         // La prima richiesta dovrebbe essere automaticamente rifiutata
         $this->assertGreaterThan(0, count($result['rejected_requests']));
-        
+
         $firstRequest->refresh();
         $this->assertEquals('rejected', $firstRequest->status);
     }
