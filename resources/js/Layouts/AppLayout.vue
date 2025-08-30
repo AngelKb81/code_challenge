@@ -17,6 +17,9 @@
                             <NavLink :href="route('dashboard')" :active="route().current('dashboard')">
                                 Dashboard
                             </NavLink>
+                            <NavLink :href="route('statistics.index')" :active="route().current('statistics.*')">
+                                Statistiche
+                            </NavLink>
                             <template v-if="$page.props.auth.user">
                                 <!-- Dropdown Magazzino -->
                                 <div class="relative" @mouseenter="showWarehouseMenu = true" @mouseleave="showWarehouseMenu = false">
@@ -127,6 +130,9 @@
                 <div class="pt-2 pb-3 space-y-1">
                     <ResponsiveNavLink :href="route('dashboard')" :active="route().current('dashboard')">
                         Dashboard
+                    </ResponsiveNavLink>
+                    <ResponsiveNavLink :href="route('statistics.index')" :active="route().current('statistics.*')">
+                        Statistiche
                     </ResponsiveNavLink>
                     <template v-if="$page.props.auth.user">
                         <!-- Magazzino Menu -->

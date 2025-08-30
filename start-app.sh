@@ -3,6 +3,7 @@
 # ==================================================
 # Script di Avvio Automatico - Code Challenge App
 # Laravel 11 + Vue 3 + Inertia.js + Magazzino
+# AGGIORNATO: 30 Agosto 2025 - Include Statistics Dashboard
 # ==================================================
 
 echo "🚀 Avvio Code Challenge Application..."
@@ -26,6 +27,10 @@ print_success() {
 
 print_warning() {
     echo -e "${YELLOW}[WARNING]${NC} $1"
+}
+
+print_error() {
+    echo -e "${RED}[ERROR]${NC} $1"
 }
 
 print_error() {

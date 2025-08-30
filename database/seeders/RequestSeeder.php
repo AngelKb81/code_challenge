@@ -27,9 +27,9 @@ class RequestSeeder extends Seeder
         }
 
         $requests = [
-            // Richieste approvate e attive
+            // Richieste per user@example.com (ID = 2)
             [
-                'user_id' => $users->random()->id,
+                'user_id' => 2, // user@example.com  
                 'item_id' => ($macbook = $items->where('name', 'MacBook Pro 14" M3')->first()) ? $macbook->id : $items->random()->id,
                 'start_date' => Carbon::now()->subDays(10),
                 'end_date' => Carbon::now()->addDays(20),
@@ -37,13 +37,13 @@ class RequestSeeder extends Seeder
                 'priority' => 'medium',
                 'reason' => 'Sviluppo applicazione mobile per nuovo progetto cliente',
                 'notes' => 'Necessario per configurazione ambiente di sviluppo iOS',
-                'approved_by' => $admins->random()->id,
+                'approved_by' => 1, // admin@example.com
                 'approved_at' => Carbon::now()->subDays(8),
                 'created_at' => Carbon::now()->subDays(12),
                 'updated_at' => Carbon::now()->subDays(8)
             ],
             [
-                'user_id' => $users->random()->id,
+                'user_id' => 2, // user@example.com
                 'item_id' => ($monitor = $items->where('name', 'Monitor LG UltraWide 34"')->first()) ? $monitor->id : $items->random()->id,
                 'start_date' => Carbon::now()->subDays(5),
                 'end_date' => Carbon::now()->addDays(25),
@@ -51,15 +51,15 @@ class RequestSeeder extends Seeder
                 'priority' => 'low',
                 'reason' => 'Miglioramento postazione di lavoro per aumento produttività',
                 'notes' => 'Monitor aggiuntivo per lavoro su più progetti contemporaneamente',
-                'approved_by' => $admins->random()->id,
+                'approved_by' => 1, // admin@example.com
                 'approved_at' => Carbon::now()->subDays(3),
                 'created_at' => Carbon::now()->subDays(7),
                 'updated_at' => Carbon::now()->subDays(3)
             ],
 
-            // Richieste in attesa di approvazione
+            // Richieste per Marco Rossi (ID = 3)
             [
-                'user_id' => $users->random()->id,
+                'user_id' => 3, // marco.rossi@example.com
                 'item_id' => ($ipad = $items->where('name', 'iPad Pro 12.9" M2')->first()) ? $ipad->id : $items->random()->id,
                 'start_date' => Carbon::now()->addDays(3),
                 'end_date' => Carbon::now()->addDays(15),
@@ -71,7 +71,7 @@ class RequestSeeder extends Seeder
                 'updated_at' => Carbon::now()->subDays(2)
             ],
             [
-                'user_id' => $users->random()->id,
+                'user_id' => 4, // giulia.bianchi@example.com
                 'item_id' => ($projector = $items->where('name', 'Proiettore Epson EB-FH06')->first()) ? $projector->id : $items->random()->id,
                 'start_date' => Carbon::now()->addDays(7),
                 'end_date' => Carbon::now()->addDays(14),
@@ -83,9 +83,9 @@ class RequestSeeder extends Seeder
                 'updated_at' => Carbon::now()->subDay()
             ],
 
-            // Richieste rifiutate
+            // Richieste rifiutate per altri utenti
             [
-                'user_id' => $users->random()->id,
+                'user_id' => 5, // luca.ferrari@example.com
                 'item_id' => ($camera = $items->where('name', 'Telecamera Sony FX30')->first()) ? $camera->id : $items->random()->id,
                 'start_date' => Carbon::now()->subDays(5),
                 'end_date' => Carbon::now()->addDays(10),
@@ -93,7 +93,7 @@ class RequestSeeder extends Seeder
                 'priority' => 'low',
                 'reason' => 'Video personale per social media',
                 'notes' => 'Richiesta per uso non aziendale',
-                'approved_by' => $admins->random()->id,
+                'approved_by' => 1, // admin@example.com
                 'approved_at' => Carbon::now()->subDays(3),
                 'created_at' => Carbon::now()->subDays(6),
                 'updated_at' => Carbon::now()->subDays(3)
@@ -101,7 +101,7 @@ class RequestSeeder extends Seeder
 
             // Richieste completate
             [
-                'user_id' => $users->random()->id,
+                'user_id' => 6, // sara.romano@example.com
                 'item_id' => ($dell = $items->where('name', 'Dell OptiPlex 7090')->first()) ? $dell->id : $items->random()->id,
                 'start_date' => Carbon::now()->subDays(30),
                 'end_date' => Carbon::now()->subDays(10),
@@ -109,13 +109,13 @@ class RequestSeeder extends Seeder
                 'priority' => 'high',
                 'reason' => 'Sostituzione temporanea workstation in riparazione',
                 'notes' => 'Richiesta urgente per continuità lavorativa',
-                'approved_by' => $admins->random()->id,
+                'approved_by' => 1, // admin@example.com
                 'approved_at' => Carbon::now()->subDays(28),
                 'created_at' => Carbon::now()->subDays(32),
                 'updated_at' => Carbon::now()->subDays(10)
             ],
             [
-                'user_id' => $users->random()->id,
+                'user_id' => 7, // andrea.russo@example.com
                 'item_id' => ($microphone = $items->where('name', 'Microfono Shure SM7B')->first()) ? $microphone->id : $items->random()->id,
                 'start_date' => Carbon::now()->subDays(20),
                 'end_date' => Carbon::now()->subDays(5),
@@ -123,7 +123,7 @@ class RequestSeeder extends Seeder
                 'priority' => 'medium',
                 'reason' => 'Registrazione podcast aziendale mensile',
                 'notes' => 'Episodio speciale con ospite esterno',
-                'approved_by' => $admins->random()->id,
+                'approved_by' => 1, // admin@example.com
                 'approved_at' => Carbon::now()->subDays(18),
                 'created_at' => Carbon::now()->subDays(22),
                 'updated_at' => Carbon::now()->subDays(5)
@@ -131,7 +131,7 @@ class RequestSeeder extends Seeder
 
             // Richieste scadute
             [
-                'user_id' => $users->random()->id,
+                'user_id' => 8, // chiara.marino@example.com
                 'item_id' => ($accessPoint = $items->where('name', 'Access Point WiFi 6E')->first()) ? $accessPoint->id : $items->random()->id,
                 'start_date' => Carbon::now()->subDays(15),
                 'end_date' => Carbon::now()->subDays(2),
@@ -139,7 +139,7 @@ class RequestSeeder extends Seeder
                 'priority' => 'medium',
                 'reason' => 'Test copertura WiFi in nuova area uffici',
                 'notes' => 'Installazione temporanea per valutazione prestazioni',
-                'approved_by' => $admins->random()->id,
+                'approved_by' => 1, // admin@example.com
                 'approved_at' => Carbon::now()->subDays(13),
                 'created_at' => Carbon::now()->subDays(17),
                 'updated_at' => Carbon::now()->subDays(13)
@@ -147,7 +147,7 @@ class RequestSeeder extends Seeder
 
             // Richieste future ad alta priorità
             [
-                'user_id' => $users->random()->id,
+                'user_id' => 9, // federico.greco@example.com
                 'item_id' => ($desk = $items->where('name', 'Scrivania Regolabile Elettrica')->first()) ? $desk->id : $items->random()->id,
                 'start_date' => Carbon::now()->addDays(14),
                 'end_date' => Carbon::now()->addDays(60),
