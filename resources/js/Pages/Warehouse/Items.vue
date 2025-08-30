@@ -97,17 +97,18 @@
                         class="bg-white overflow-hidden shadow-sm sm:rounded-lg hover:shadow-md transition-shadow"
                     >
                         <div class="p-6">
-                            <!-- Status Badge -->
-                            <div class="flex justify-between items-start mb-3">
-                                <span :class="getStatusClass(item.status)" class="inline-flex px-2 py-1 text-xs font-semibold rounded-full">
-                                    {{ getStatusText(item.status) }}
+                            <!-- Status Badge and Quantity -->
+                            <div class="flex justify-between items-center mb-2">
+                                <span :class="getAvailabilityClass(item)" class="inline-flex px-2 py-1 text-xs font-semibold rounded-full">
+                                    {{ getAvailabilityText(item) }}
                                 </span>
-                                <span class="text-xs text-gray-500">
-                                    <span class="font-medium">Disponibili:</span> {{ item.available_quantity || 0 }} / {{ item.quantity }}
-                                </span>
-                            </div>
-
-                            <!-- Item Info -->
+                                <div class="text-sm text-gray-600">
+                                    <span :class="(item.available_quantity || 0) === 0 ? 'text-red-600 font-semibold' : 'text-gray-900'">
+                                        {{ item.available_quantity || 0 }}
+                                    </span>
+                                    <span class="text-gray-500 text-xs ml-1">/ {{ item.quantity }}</span>
+                                </div>
+                            </div>                            <!-- Item Info -->
                             <h3 class="text-lg font-semibold text-gray-900 mb-2">{{ item.name }}</h3>
                             
                             <div class="space-y-1 text-sm text-gray-600 mb-4">
@@ -281,6 +282,28 @@ export default {
                 'reserved': 'bg-blue-100 text-blue-800'
             }
             return classMap[status] || 'bg-gray-100 text-gray-800'
+        },
+
+        getAvailabilityText(item) {
+            // Se lo status operativo non è available, mostra quello
+            if (item.status !== 'available') {
+                return this.getStatusText(item.status)
+            }
+            
+            // Altrimenti mostra solo disponibile o non disponibile
+            const availableQty = item.available_quantity || 0
+            return availableQty > 0 ? 'Disponibile' : 'Non disponibile'
+        },
+
+        getAvailabilityClass(item) {
+            // Se lo status operativo non è available, usa la classe dello status
+            if (item.status !== 'available') {
+                return this.getStatusClass(item.status)
+            }
+            
+            // Altrimenti usa verde per disponibile, rosso per non disponibile
+            const availableQty = item.available_quantity || 0
+            return availableQty > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
         }
     }
 }

@@ -1,14 +1,167 @@
 # 🔧 DOCUMENTAZIONE TECNICA - Code Challenge
 
 ## 📋 **Indice**
-1. [Architettura Sistema](#architettura-sistema)
-2. [Database Design](#database-design)  
-3. [Autorizzazioni & Sicurezza](#autorizzazioni--sicurezza)
-4. [API Routes](#api-routes)
-5. [Frontend Components](#frontend-components)
-6. [Business Logic](#business-logic)
-7. [Performance & Optimization](#performance--optimization)
-8. [Testing & Debugging](#testing--debugging)
+1. [Decisioni Architetturali](#decisioni-architetturali)
+2. [Architettura Sistema](#architettura-sistema)
+3. [Database Design](#database-design)  
+4. [Autorizzazioni & Sicurezza](#autorizzazioni--sicurezza)
+5. [API Routes](#api-routes)
+6. [Frontend Components](#frontend-components)
+7. [Business Logic](#business-logic)
+8. [Performance & Optimization](#performance--optimization)
+9. [Testing & Debugging](#testing--debugging)
+
+---
+
+## 🎯 **Decisioni Architetturali**
+
+### **Inventory Management Approach: Quantity-Based vs Asset-Based**
+
+#### **Analisi del Problema**
+Per sistemi di warehouse management esistono due approcci principali:
+
+**1. Quantity-Based (Implementato)**
+- Gestione per quantità aggregate
+- Un record per tipologia di item
+- Calcolo disponibilità: `quantity - assigned_quantity`
+
+**2. Asset-Based (Enterprise)**
+- Gestione granulare per singolo asset
+- Tracciabilità individuale con seriali
+- Relazioni complesse tra modelli e istanze
+
+#### **Matrice di Decisione**
+
+| Criterio | Quantity-Based | Asset-Based | Peso | Scelta |
+|----------|----------------|-------------|------|--------|
+| **Complessità Sviluppo** | ⭐⭐⭐⭐⭐ | ⭐⭐ | Alto | ✅ Quantity |
+| **Time to Market** | ⭐⭐⭐⭐⭐ | ⭐⭐ | Alto | ✅ Quantity |
+| **Performance** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ | Medio | ✅ Quantity |
+| **Tracciabilità** | ⭐⭐ | ⭐⭐⭐⭐⭐ | Basso* | ❌ Asset |
+| **Scalabilità Enterprise** | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ | Basso* | ❌ Asset |
+| **Adeguatezza Contesto** | ⭐⭐⭐⭐⭐ | ⭐⭐ | Alto | ✅ Quantity |
+
+*Peso basso per contesto demo/test
+
+#### **Schema Implementato (Quantity-Based)**
+```sql
+-- Approccio semplificato per aggregati
+items {
+    id, name, category, brand,
+    quantity INT,                    -- Quantità totale
+    status ENUM('available', ...),   -- Stato operativo
+    -- available_quantity calcolato dinamicamente
+}
+
+requests {
+    id, user_id, item_id,
+    quantity INT,                    -- Quantità richiesta
+    status ENUM('pending', 'approved', ...)
+}
+
+-- Calcolo disponibilità
+available_quantity = items.quantity - SUM(approved_requests.quantity)
+```
+
+#### **Schema Alternativo (Asset-Based)**
+```sql
+-- Approccio enterprise con tracciabilità granulare
+categories { id, name, description }
+brands { id, name }
+models { id, category_id, brand_id, name, specifications }
+
+asset_instances {
+    id, model_id, serial_number,
+    purchase_date, condition,
+    status ENUM('available', 'assigned', 'maintenance', ...),
+    location, notes
+}
+
+requests { id, user_id, model_id, quantity_requested }
+request_assignments { request_id, asset_instance_id, assigned_date }
+```
+
+#### **Pros/Cons Analisi Dettagliata**
+
+**✅ Vantaggi Quantity-Based (Scelto)**
+- **Semplicità**: 2 tabelle principali vs 6+ tabelle
+- **Performance**: Query dirette, meno JOIN, calcoli veloci
+- **Sviluppo Rapido**: 80% meno tempo di sviluppo
+- **UI Intuitiva**: Interfacce meno complesse
+- **Manutenibilità**: Codice più pulito e comprensibile
+- **Adeguato al Contesto**: Perfetto per demo/prototipi
+
+**❌ Limitazioni Quantity-Based**
+- **Tracciabilità**: Non posso tracciare singoli asset
+- **Granularità**: Impossibile gestire stati di singoli item
+- **Seriali**: Perdita informazioni sui numeri seriali
+- **Audit**: Trail limitato per compliance enterprise
+- **Manutenzione**: Non posso marcare singoli asset "in riparazione"
+
+**✅ Vantaggi Asset-Based (Non implementato)**
+- **Tracciabilità Completa**: Ogni asset tracciato individualmente
+- **Compliance**: Rispetta standard enterprise
+- **Flessibilità**: Gestione granulare di stati e condizioni
+- **Reporting**: Analytics dettagliate per asset
+- **Scalabilità**: Adatto per organizzazioni complesse
+
+**❌ Limitazioni Asset-Based**
+- **Complessità**: Architettura molto più complessa
+- **Performance**: Query pesanti con molti JOIN
+- **Over-engineering**: Eccessivo per il contesto attuale
+- **Sviluppo**: Richiede 3-4x più tempo
+- **UI Complexity**: Interfacce molto più articolate
+
+#### **Giustificazione della Scelta**
+
+**Contesto Progetto**: Code challenge / Demo application
+**Requisiti**: Dimostrare competenze full-stack moderne
+**Timeline**: Sviluppo rapido richiesto
+**Compliance**: Non necessaria per ambiente di test
+
+**Decisione**: Quantity-Based approach per massimizzare:
+- Velocità di sviluppo
+- Chiarezza del codice  
+- Performance del sistema
+- Semplicità di manutenzione
+
+#### **Percorso di Migrazione Futura**
+
+Se il sistema dovesse evolvere verso un approccio enterprise:
+
+```sql
+-- Step 1: Normalizzazione Master Data
+CREATE TABLE categories, brands, models;
+ALTER TABLE items ADD model_id;
+
+-- Step 2: Asset Instances
+CREATE TABLE asset_instances (
+    id, model_id, serial_number, 
+    item_id, -- temporary bridge
+    status, condition, location
+);
+
+-- Step 3: Request Assignments  
+CREATE TABLE request_assignments (
+    request_id, asset_instance_id,
+    assigned_date, returned_date
+);
+
+-- Step 4: Data Migration
+-- Migrazione graduale mantenendo compatibilità
+
+-- Step 5: Cleanup
+-- Rimozione colonne quantity da items
+-- Aggiornamento logica business
+```
+
+#### **Lessons Learned**
+
+1. **Context is King**: L'architettura deve servire il contesto
+2. **YAGNI Principle**: "You Aren't Gonna Need It" - non over-engineer
+3. **Incremental Evolution**: Meglio partire semplice e evolvere
+4. **Performance vs Features**: Bilanciare requisiti tecnici e funzionali
+5. **Documentation**: Documentare le scelte per future evoluzioni
 
 ---
 

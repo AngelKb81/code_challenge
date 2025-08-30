@@ -123,13 +123,10 @@
                                             </span>
                                             <span class="text-gray-500 text-xs ml-1">/ {{ item.quantity }}</span>
                                         </div>
-                                        <div class="text-xs text-gray-500">
-                                            {{ (item.available_quantity || 0) <= 5 && (item.available_quantity || 0) > 0 ? 'Scorte basse' : (item.available_quantity || 0) === 0 ? 'Esaurito' : 'Disponibile' }}
-                                        </div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <span :class="getStatusClass(item.status)" class="inline-flex px-2 py-1 text-xs font-semibold rounded-full">
-                                            {{ getStatusText(item.status) }}
+                                        <span :class="getAvailabilityClass(item)" class="inline-flex px-2 py-1 text-xs font-semibold rounded-full">
+                                            {{ getAvailabilityText(item) }}
                                         </span>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -338,6 +335,28 @@ export default {
                 'reserved': 'bg-blue-100 text-blue-800'
             }
             return classMap[status] || 'bg-gray-100 text-gray-800'
+        },
+
+        getAvailabilityText(item) {
+            // Se lo status operativo non è available, mostra quello
+            if (item.status !== 'available') {
+                return this.getStatusText(item.status)
+            }
+            
+            // Altrimenti mostra solo disponibile o non disponibile
+            const availableQty = item.available_quantity || 0
+            return availableQty > 0 ? 'Disponibile' : 'Non disponibile'
+        },
+
+        getAvailabilityClass(item) {
+            // Se lo status operativo non è available, usa la classe dello status
+            if (item.status !== 'available') {
+                return this.getStatusClass(item.status)
+            }
+            
+            // Altrimenti usa verde per disponibile, rosso per non disponibile
+            const availableQty = item.available_quantity || 0
+            return availableQty > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
         },
 
         confirmDelete(item) {

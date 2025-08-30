@@ -14,15 +14,95 @@
 
 Sistema completo di gestione magazzino con autenticazione basata su ruoli, interfaccia moderna e operazioni CRUD complete. Sviluppato come code challenge per dimostrare competenze full-stack moderne.
 
+## 🏗️ **Scelte Architetturali**
+
+### **Approccio Quantity-Based vs Asset-Based**
+
+Per questo progetto abbiamo scelto un **approccio quantity-based** semplificato invece di un sistema enterprise asset-based più complesso. Ecco il razionale:
+
+#### **🔹 Approccio Implementato (Quantity-Based)**
+```sql
+Items Table:
+- iPhone 15 Pro | quantity: 3 | available_quantity: (calcolato dinamicamente)
+- MacBook Pro   | quantity: 5 | available_quantity: quantity - approved_requests
+
+Requests Table:
+- user_id | item_id | quantity | status
+```
+
+#### **🔹 Approccio Enterprise (Asset-Based)**
+```sql
+Categories → Brands → Models → Items (Asset Instances)
+- Tracciabilità individuale degli asset
+- Seriali univoci per ogni item
+- Assegnazioni specifiche asset-to-user
+- Stati granulari per singoli asset
+```
+
+### **📋 Motivazioni della Scelta**
+
+#### **✅ Vantaggi Approccio Attuale**
+- **Semplicità implementativa**: Meno tabelle, relazioni più dirette
+- **Performance superiore**: Calcoli veloci, meno JOIN nelle query
+- **Sviluppo rapido**: Ideale per prototipazione e demo
+- **UI intuitiva**: Interfacce meno complesse da gestire
+- **Adeguato al contesto**: Sistema di test senza requisiti di compliance
+
+#### **⚠️ Limitazioni Consapevoli**
+- **Tracciabilità limitata**: Non tracciamo singoli asset ma quantità aggregate
+- **Seriali non gestiti**: Perdiamo granularità sui numeri seriali individuali
+- **Manutenzione semplificata**: Non possiamo gestire stati di singoli asset
+- **Audit trail ridotto**: Meno dettagli per reporting enterprise
+
+#### **🎯 Quando Scegliere Asset-Based**
+Un approccio enterprise asset-based sarebbe preferibile per:
+- **Sistemi di produzione** con requisiti di compliance
+- **IT Asset Management** dove ogni dispositivo deve essere tracciato
+- **Organizzazioni enterprise** con normative strict di audit
+- **Gestione garanzie** individuali e contratti di manutenzione
+- **Inventory da alta frequenza** con rotazione complessa
+
+#### **🎯 Quando Quantity-Based è Appropriato**
+Il nostro approccio è ideale per:
+- **Prototipi e demo** come questo progetto
+- **Sistemi semplificati** senza requisiti di tracciabilità individuale
+- **Inventory di consumabili** dove la granularità individuale non serve
+- **MVP e startup** che necessitano velocità di sviluppo
+
+### **🔮 Evoluzione Futura**
+Il sistema attuale può essere facilmente esteso verso un approccio asset-based aggiungendo:
+```sql
+-- Tabelle master data
+categories, brands, models
+
+-- Asset instances
+items → asset_instances (con seriali individuali)
+
+-- Relazioni request-to-asset
+request_assets (per tracciare assegnazioni specifiche)
+```
+
 ### 🌟 **Caratteristiche Principali**
 
 - ✅ **Autenticazione Completa** - Sistema login/logout con gestione sessioni
 - ✅ **Gestione Ruoli** - Distinzione Admin/User con autorizzazioni granulari
 - ✅ **CRUD Magazzino** - Gestione completa articoli (solo Admin)
+- ✅ **Sistema Richieste** - Workflow completo per richiesta/approvazione item
+- ✅ **Calcolo Disponibilità** - Quantità disponibili calcolate dinamicamente
 - ✅ **Dashboard Interattiva** - Interfaccia responsiva e moderna
 - ✅ **SPA Experience** - Single Page Application con Inertia.js
 - ✅ **Dati Realistici** - Seeder con dati di esempio pronti all'uso
 - ✅ **Avvio Automatico** - Script per setup e lancio con un comando
+
+### 📘 **Tipo di Progetto**
+
+**Questo è un progetto dimostrativo/code challenge** progettato per:
+- Mostrare competenze full-stack moderne (Laravel 11 + Vue 3)
+- Dimostrare architetture SPA con Inertia.js
+- Implementare patterns di sviluppo clean e scalabili
+- Fornire una base solida per prototipi rapidi
+
+**Non è un sistema enterprise-ready** ma può essere facilmente esteso verso un approccio più complesso per contesti di produzione con requisiti di compliance e tracciabilità granulare.
 
 ---
 
@@ -164,7 +244,21 @@ npm run start
 
 ---
 
-## 🗂️ **STRUTTURA CODEBASE**
+## � **Documentazione Completa**
+
+Per approfondimenti tecnici dettagliati, decisioni architetturali e specifiche implementative:
+
+- **[📋 TECHNICAL_DOCS.md](./TECHNICAL_DOCS.md)** - Documentazione tecnica completa
+  - Analisi dettagliata Quantity-Based vs Asset-Based approach
+  - Giustificazioni delle scelte architetturali 
+  - Matrice di decisione e trade-offs
+  - Schema database e relazioni
+  - Performance e ottimizzazioni
+  - Percorsi di migrazione futura
+
+---
+
+## �🗂️ **STRUTTURA CODEBASE**
 
 ### Controller
 ```
