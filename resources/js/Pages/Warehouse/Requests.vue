@@ -430,6 +430,7 @@ const props = defineProps({
     priorities: Array,
     users: Array,
     filters: Object,
+    auth: Object,
 })
 
 // State
@@ -467,6 +468,12 @@ const clearFilters = () => {
 
 const approveRequest = (request) => {
     if (confirm('Confermi di voler approvare questa richiesta?')) {
+        // Verifica che l'utente sia admin prima di procedere
+        if (props.auth?.user?.role !== 'admin') {
+            alert('Non hai i permessi per questa azione')
+            return
+        }
+        
         router.patch(route('warehouse.requests.approve', request.id), {}, {
             onSuccess: () => {
                 // La pagina si ricaricherà automaticamente
@@ -479,6 +486,12 @@ const approveRequest = (request) => {
 }
 
 const showRejectModal = (request) => {
+    // Verifica che l'utente sia admin prima di procedere
+    if (props.auth?.user?.role !== 'admin') {
+        alert('Non hai i permessi per questa azione')
+        return
+    }
+    
     selectedRequest.value = request
     rejectReason.value = ''
     showingRejectModal.value = true
@@ -487,6 +500,12 @@ const showRejectModal = (request) => {
 const rejectRequest = () => {
     if (!rejectReason.value.trim()) {
         alert('Inserisci un motivo per il rifiuto')
+        return
+    }
+    
+    // Verifica che l'utente sia admin prima di procedere
+    if (props.auth?.user?.role !== 'admin') {
+        alert('Non hai i permessi per questa azione')
         return
     }
     
@@ -506,6 +525,12 @@ const rejectRequest = () => {
 
 const markAsReturned = (request) => {
     if (confirm('Confermi che questo articolo è stato restituito?')) {
+        // Verifica che l'utente sia admin prima di procedere
+        if (props.auth?.user?.role !== 'admin') {
+            alert('Non hai i permessi per questa azione')
+            return
+        }
+        
         router.patch(route('warehouse.requests.return', request.id), {}, {
             onSuccess: () => {
                 // La pagina si ricaricherà automaticamente
