@@ -33,7 +33,7 @@ Sistema completo di gestione magazzino con autenticazione basata su ruoli, inter
 
 ### **Approccio Quantity-Based vs Asset-Based**
 
-Per questo progetto abbiamo scelto un **approccio quantity-based** semplificato invece di un sistema enterprise asset-based più complesso. Ecco il razionale:
+Per questo progetto abbiamo scelto un **approccio quantity-based** semplificato invece di un sistema enterprise asset-based più complesso. Ecco il ragionamento:
 
 #### **🔹 Approccio Implementato (Quantity-Based)**
 ```sql

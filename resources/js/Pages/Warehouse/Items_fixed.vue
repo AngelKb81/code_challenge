@@ -12,13 +12,13 @@
                 </div>
                 <div class="flex space-x-2">
                     <Link 
-                        :href="safeRoute('warehouse.index')" 
+                        :href="route('warehouse.index')" 
                         class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition duration-200"
                     >
                         ← Torna alla Dashboard
                     </Link>
                     <Link 
-                        :href="safeRoute('warehouse.requests.create')" 
+                        :href="route('warehouse.requests.create')" 
                         class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition duration-200"
                     >
                         + Nuova Richiesta
@@ -136,7 +136,7 @@
                             <div class="mt-4">
                                 <Link 
                                     v-if="item.status === 'available' && (item.available_quantity || 0) > 0"
-                                    :href="safeRoute('warehouse.requests.create', { item_id: item.id })"
+                                    :href="route('warehouse.requests.create', { item_id: item.id })"
                                     class="w-full inline-flex justify-center items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                                 >
                                     Richiedi
@@ -186,27 +186,19 @@
                             </div>
                             <div>
                                 <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
-                                    <template v-for="link in items.links" :key="link.label">
-                                        <Link 
-                                            v-if="link.url"
-                                            :href="link.url"
-                                            v-html="link.label"
-                                            :class="[
-                                                'relative inline-flex items-center px-2 py-2 border text-sm font-medium',
-                                                link.active 
-                                                    ? 'z-10 bg-blue-50 border-blue-500 text-blue-600' 
-                                                    : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
-                                            ]"
-                                        ></Link>
-                                        <span 
-                                            v-else
-                                            v-html="link.label"
-                                            :class="[
-                                                'relative inline-flex items-center px-2 py-2 border text-sm font-medium',
-                                                'bg-white border-gray-300 text-gray-500 cursor-not-allowed opacity-50'
-                                            ]"
-                                        ></span>
-                                    </template>
+                                    <Link 
+                                        v-for="link in items.links" 
+                                        :key="link.label"
+                                        :href="link.url"
+                                        v-html="link.label"
+                                        :class="[
+                                            'relative inline-flex items-center px-2 py-2 border text-sm font-medium',
+                                            link.active 
+                                                ? 'z-10 bg-blue-50 border-blue-500 text-blue-600' 
+                                                : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50',
+                                            !link.url ? 'cursor-not-allowed opacity-50' : 'hover:bg-gray-50'
+                                        ]"
+                                    ></Link>
                                 </nav>
                             </div>
                         </div>
@@ -227,32 +219,15 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed } from 'vue'
 import AppLayout from '@/Layouts/AppLayout.vue'
-import { Link, router, usePage } from '@inertiajs/vue3'
-import DebugLogger, { safeRouteWithLogging } from '@/utils/debug-logger.js'
+import { Link, router } from '@inertiajs/vue3'
 
 const props = defineProps({
     items: Object,
     categories: Array,
     statuses: Array,
     filters: Object,
-})
-
-// Accesso alla pagina corrente tramite usePage()
-const page = usePage()
-
-// Log di debug per il component
-onMounted(() => {
-    DebugLogger.info('Items.vue mounted')
-    DebugLogger.checkProps('Items.vue', props)
-    DebugLogger.checkPageProps('Items.vue', page)
-    DebugLogger.checkRouter('Items.vue')
-    
-    // Verifichiamo le route specifiche
-    DebugLogger.checkRoute('warehouse.index')
-    DebugLogger.checkRoute('warehouse.requests.create')
-    DebugLogger.checkRoute('warehouse.items')
 })
 
 // State
@@ -263,69 +238,11 @@ const form = ref({
 })
 
 // Methods
-const safeRoute = (name, params = {}) => {
-    DebugLogger.log(`safeRoute called in Items.vue`, { name, params })
-    
-    try {
-        // Verifichiamo se la funzione route è disponibile
-        if (typeof route === 'undefined') {
-            DebugLogger.error(`Route function is undefined in Items.vue for ${name}`)
-            return '#';
-        }
-
-        if (route === null) {
-            DebugLogger.error(`Route function is null in Items.vue for ${name}`)
-            return '#';
-        }
-
-        const routeResult = route(name, params);
-        
-        if (routeResult === null || routeResult === undefined) {
-            DebugLogger.warn(`Route ${name} returned null/undefined in Items.vue`, { result: routeResult, params })
-            return '#';
-        }
-
-        DebugLogger.log(`Route ${name} successful in Items.vue`, { result: routeResult, params })
-        return routeResult;
-        
-    } catch (error) {
-        DebugLogger.error(`Exception in safeRoute for ${name} in Items.vue`, { error, params })
-        return '#';
-    }
-}
-
 const search = () => {
-    DebugLogger.log('Search function called in Items.vue', { formValue: form.value })
-    
-    try {
-        const warehouseItemsRoute = safeRoute('warehouse.items');
-        DebugLogger.log('Warehouse items route result', { route: warehouseItemsRoute })
-        
-        if (warehouseItemsRoute !== '#') {
-            DebugLogger.log('Executing router.get for warehouse.items')
-            
-            router.get(warehouseItemsRoute, form.value, {
-                preserveState: true,
-                replace: true,
-                onStart: () => {
-                    DebugLogger.log('Router navigation started')
-                },
-                onSuccess: () => {
-                    DebugLogger.log('Router navigation successful')
-                },
-                onError: (errors) => {
-                    DebugLogger.error('Router navigation error', errors)
-                },
-                onFinish: () => {
-                    DebugLogger.log('Router navigation finished')
-                }
-            })
-        } else {
-            DebugLogger.warn('Route warehouse.items not available, cannot search')
-        }
-    } catch (error) {
-        DebugLogger.error('Error in search function', error)
-    }
+    router.get(route('warehouse.items'), form.value, {
+        preserveState: true,
+        replace: true,
+    })
 }
 
 const resetFilters = () => {

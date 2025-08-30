@@ -12,13 +12,13 @@
                 </div>
                 <div class="flex space-x-2">
                     <Link 
-                        :href="safeRoute('warehouse.index')" 
+                        :href="route('warehouse.index')" 
                         class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition duration-200"
                     >
                         ← Torna alla Dashboard
                     </Link>
                     <Link 
-                        :href="safeRoute('warehouse.requests.create')" 
+                        :href="route('warehouse.requests.create')" 
                         class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition duration-200"
                     >
                         + Nuova Richiesta
@@ -108,9 +108,7 @@
                                     </span>
                                     <span class="text-gray-500 text-xs ml-1">/ {{ item.quantity }}</span>
                                 </div>
-                            </div>
-                            
-                            <!-- Item Info -->
+                            </div>                            <!-- Item Info -->
                             <h3 class="text-lg font-semibold text-gray-900 mb-2">{{ item.name }}</h3>
                             
                             <div class="space-y-1 text-sm text-gray-600 mb-4">
@@ -136,7 +134,7 @@
                             <div class="mt-4">
                                 <Link 
                                     v-if="item.status === 'available' && (item.available_quantity || 0) > 0"
-                                    :href="safeRoute('warehouse.requests.create', { item_id: item.id })"
+                                    :href="route('warehouse.requests.create', { item_id: item.id })"
                                     class="w-full inline-flex justify-center items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                                 >
                                     Richiedi
@@ -186,27 +184,19 @@
                             </div>
                             <div>
                                 <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
-                                    <template v-for="link in items.links" :key="link.label">
-                                        <Link 
-                                            v-if="link.url"
-                                            :href="link.url"
-                                            v-html="link.label"
-                                            :class="[
-                                                'relative inline-flex items-center px-2 py-2 border text-sm font-medium',
-                                                link.active 
-                                                    ? 'z-10 bg-blue-50 border-blue-500 text-blue-600' 
-                                                    : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
-                                            ]"
-                                        ></Link>
-                                        <span 
-                                            v-else
-                                            v-html="link.label"
-                                            :class="[
-                                                'relative inline-flex items-center px-2 py-2 border text-sm font-medium',
-                                                'bg-white border-gray-300 text-gray-500 cursor-not-allowed opacity-50'
-                                            ]"
-                                        ></span>
-                                    </template>
+                                    <Link 
+                                        v-for="link in items.links" 
+                                        :key="link.label"
+                                        :href="link.url"
+                                        v-html="link.label"
+                                        :class="[
+                                            'relative inline-flex items-center px-2 py-2 border text-sm font-medium',
+                                            link.active 
+                                                ? 'z-10 bg-blue-50 border-blue-500 text-blue-600' 
+                                                : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50',
+                                            !link.url ? 'cursor-not-allowed opacity-50' : 'hover:bg-gray-50'
+                                        ]"
+                                    ></Link>
                                 </nav>
                             </div>
                         </div>
@@ -226,161 +216,96 @@
     </AppLayout>
 </template>
 
-<script setup>
-import { ref, computed, onMounted } from 'vue'
+<script>
 import AppLayout from '@/Layouts/AppLayout.vue'
-import { Link, router, usePage } from '@inertiajs/vue3'
-import DebugLogger, { safeRouteWithLogging } from '@/utils/debug-logger.js'
+import { Link, router } from '@inertiajs/vue3'
 
-const props = defineProps({
-    items: Object,
-    categories: Array,
-    statuses: Array,
-    filters: Object,
-})
+export default {
+    components: {
+        AppLayout,
+        Link,
+    },
 
-// Accesso alla pagina corrente tramite usePage()
-const page = usePage()
+    props: {
+        items: Object,
+        categories: Array,
+        statuses: Array,
+        filters: Object,
+    },
 
-// Log di debug per il component
-onMounted(() => {
-    DebugLogger.info('Items.vue mounted')
-    DebugLogger.checkProps('Items.vue', props)
-    DebugLogger.checkPageProps('Items.vue', page)
-    DebugLogger.checkRouter('Items.vue')
-    
-    // Verifichiamo le route specifiche
-    DebugLogger.checkRoute('warehouse.index')
-    DebugLogger.checkRoute('warehouse.requests.create')
-    DebugLogger.checkRoute('warehouse.items')
-})
-
-// State
-const form = ref({
-    search: props.filters?.search || '',
-    category: props.filters?.category || '',
-    status: props.filters?.status || '',
-})
-
-// Methods
-const safeRoute = (name, params = {}) => {
-    DebugLogger.log(`safeRoute called in Items.vue`, { name, params })
-    
-    try {
-        // Verifichiamo se la funzione route è disponibile
-        if (typeof route === 'undefined') {
-            DebugLogger.error(`Route function is undefined in Items.vue for ${name}`)
-            return '#';
+    data() {
+        return {
+            form: {
+                search: this.filters?.search || '',
+                category: this.filters?.category || '',
+                status: this.filters?.status || '',
+            }
         }
+    },
 
-        if (route === null) {
-            DebugLogger.error(`Route function is null in Items.vue for ${name}`)
-            return '#';
-        }
-
-        const routeResult = route(name, params);
-        
-        if (routeResult === null || routeResult === undefined) {
-            DebugLogger.warn(`Route ${name} returned null/undefined in Items.vue`, { result: routeResult, params })
-            return '#';
-        }
-
-        DebugLogger.log(`Route ${name} successful in Items.vue`, { result: routeResult, params })
-        return routeResult;
-        
-    } catch (error) {
-        DebugLogger.error(`Exception in safeRoute for ${name} in Items.vue`, { error, params })
-        return '#';
-    }
-}
-
-const search = () => {
-    DebugLogger.log('Search function called in Items.vue', { formValue: form.value })
-    
-    try {
-        const warehouseItemsRoute = safeRoute('warehouse.items');
-        DebugLogger.log('Warehouse items route result', { route: warehouseItemsRoute })
-        
-        if (warehouseItemsRoute !== '#') {
-            DebugLogger.log('Executing router.get for warehouse.items')
-            
-            router.get(warehouseItemsRoute, form.value, {
+    methods: {
+        search() {
+            router.get(route('warehouse.items'), this.form, {
                 preserveState: true,
                 replace: true,
-                onStart: () => {
-                    DebugLogger.log('Router navigation started')
-                },
-                onSuccess: () => {
-                    DebugLogger.log('Router navigation successful')
-                },
-                onError: (errors) => {
-                    DebugLogger.error('Router navigation error', errors)
-                },
-                onFinish: () => {
-                    DebugLogger.log('Router navigation finished')
-                }
             })
-        } else {
-            DebugLogger.warn('Route warehouse.items not available, cannot search')
+        },
+
+        resetFilters() {
+            this.form = {
+                search: '',
+                category: '',
+                status: '',
+            }
+            this.search()
+        },
+
+        formatDate(date) {
+            return new Date(date).toLocaleDateString('it-IT')
+        },
+
+        getStatusText(status) {
+            const statusMap = {
+                'available': 'Disponibile',
+                'not_available': 'Non disponibile',
+                'maintenance': 'In manutenzione',
+                'reserved': 'Riservato'
+            }
+            return statusMap[status] || status
+        },
+
+        getStatusClass(status) {
+            const classMap = {
+                'available': 'bg-green-100 text-green-800',
+                'not_available': 'bg-red-100 text-red-800',
+                'maintenance': 'bg-yellow-100 text-yellow-800',
+                'reserved': 'bg-blue-100 text-blue-800'
+            }
+            return classMap[status] || 'bg-gray-100 text-gray-800'
+        },
+
+        getAvailabilityText(item) {
+            // Se lo status operativo non è available, mostra quello
+            if (item.status !== 'available') {
+                return this.getStatusText(item.status)
+            }
+            
+            // Altrimenti mostra solo disponibile o non disponibile
+            const availableQty = item.available_quantity || 0
+            return availableQty > 0 ? 'Disponibile' : 'Non disponibile'
+        },
+
+        getAvailabilityClass(item) {
+            // Se lo status operativo non è available, usa la classe dello status
+            if (item.status !== 'available') {
+                return this.getStatusClass(item.status)
+            }
+            
+            // Altrimenti usa verde per disponibile, rosso per non disponibile
+            const availableQty = item.available_quantity || 0
+            return availableQty > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
         }
-    } catch (error) {
-        DebugLogger.error('Error in search function', error)
     }
-}
-
-const resetFilters = () => {
-    form.value = {
-        search: '',
-        category: '',
-        status: '',
-    }
-    search()
-}
-
-const formatDate = (date) => {
-    return new Date(date).toLocaleDateString('it-IT')
-}
-
-const getStatusText = (status) => {
-    const statusMap = {
-        'available': 'Disponibile',
-        'not_available': 'Non disponibile',
-        'maintenance': 'In manutenzione',
-        'reserved': 'Riservato'
-    }
-    return statusMap[status] || status
-}
-
-const getStatusClass = (status) => {
-    const classMap = {
-        'available': 'bg-green-100 text-green-800',
-        'not_available': 'bg-red-100 text-red-800',
-        'maintenance': 'bg-yellow-100 text-yellow-800',
-        'reserved': 'bg-blue-100 text-blue-800'
-    }
-    return classMap[status] || 'bg-gray-100 text-gray-800'
-}
-
-const getAvailabilityText = (item) => {
-    // Se lo status operativo non è available, mostra quello
-    if (item.status !== 'available') {
-        return getStatusText(item.status)
-    }
-    
-    // Altrimenti mostra solo disponibile o non disponibile
-    const availableQty = item.available_quantity || 0
-    return availableQty > 0 ? 'Disponibile' : 'Non disponibile'
-}
-
-const getAvailabilityClass = (item) => {
-    // Se lo status operativo non è available, usa la classe dello status
-    if (item.status !== 'available') {
-        return getStatusClass(item.status)
-    }
-    
-    // Altrimenti usa verde per disponibile, rosso per non disponibile
-    const availableQty = item.available_quantity || 0
-    return availableQty > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
 }
 </script>
 

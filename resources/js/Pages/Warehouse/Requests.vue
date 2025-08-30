@@ -4,21 +4,21 @@
             <div class="flex justify-between items-center">
                 <div>
                     <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                        {{ $page.props.auth.user.role === 'admin' ? 'Gestisci Richieste' : 'Le Mie Richieste' }}
+                        {{ isAdmin ? 'Gestisci Richieste' : 'Le Mie Richieste' }}
                     </h2>
                     <p class="text-gray-600 text-sm mt-1">
-                        {{ $page.props.auth.user.role === 'admin' ? 'Approva, rifiuta e gestisci tutte le richieste' : 'Visualizza e gestisci le tue richieste' }}
+                        {{ isAdmin ? 'Approva, rifiuta e gestisci tutte le richieste' : 'Visualizza e gestisci le tue richieste' }}
                     </p>
                 </div>
                 <div class="flex space-x-2">
                     <Link 
-                        :href="route('warehouse.index')" 
+                        :href="safeRoute('warehouse.index')" 
                         class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition duration-200"
                     >
                         ← Dashboard
                     </Link>
                     <Link 
-                        :href="route('warehouse.requests.create')" 
+                        :href="safeRoute('warehouse.requests.create')" 
                         class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition duration-200"
                     >
                         + Nuova Richiesta
@@ -57,7 +57,7 @@
                                 </select>
                             </div>
                             
-                            <div v-if="$page.props.auth.user.role === 'admin'">
+                            <div v-if="isAdmin">
                                 <label class="block text-sm font-medium text-gray-700 mb-2">
                                     Utente
                                 </label>
@@ -91,7 +91,7 @@
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         Richiesta
                                     </th>
-                                    <th v-if="$page.props.auth.user.role === 'admin'" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th v-if="isAdmin" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         Utente
                                     </th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -142,7 +142,7 @@
                                             </div>
                                         </div>
                                     </td>
-                                    <td v-if="$page.props.auth.user.role === 'admin'" class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    <td v-if="isAdmin" class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                         {{ request.user.name }}
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -179,7 +179,7 @@
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                         <div class="flex flex-wrap gap-2">
                                             <!-- Azioni Admin -->
-                                            <template v-if="$page.props.auth.user.role === 'admin'">
+                                            <template v-if="isAdmin">
                                                 <button
                                                     v-if="request.status === 'pending'"
                                                     @click="approveRequest(request)"
@@ -257,18 +257,27 @@
                                 </div>
                                 <div>
                                     <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-                                        <Link
-                                            v-for="link in requests.links"
-                                            :key="link.label"
-                                            :href="link.url"
-                                            :class="{
-                                                'bg-blue-50 border-blue-500 text-blue-600': link.active,
-                                                'bg-white border-gray-300 text-gray-500 hover:bg-gray-50': !link.active,
-                                                'cursor-not-allowed opacity-50': !link.url
-                                            }"
-                                            class="relative inline-flex items-center px-4 py-2 border text-sm font-medium"
-                                            v-html="link.label"
-                                        />
+                                        <template v-for="link in requests.links" :key="link.label">
+                                            <Link
+                                                v-if="link.url"
+                                                :href="link.url"
+                                                :class="{
+                                                    'bg-blue-50 border-blue-500 text-blue-600': link.active,
+                                                    'bg-white border-gray-300 text-gray-500 hover:bg-gray-50': !link.active
+                                                }"
+                                                class="relative inline-flex items-center px-4 py-2 border text-sm font-medium"
+                                                v-html="link.label"
+                                            />
+                                            <span
+                                                v-else
+                                                :class="{
+                                                    'bg-blue-50 border-blue-500 text-blue-600': link.active,
+                                                    'bg-white border-gray-300 text-gray-500': !link.active
+                                                }"
+                                                class="relative inline-flex items-center px-4 py-2 border text-sm font-medium cursor-not-allowed opacity-50"
+                                                v-html="link.label"
+                                            />
+                                        </template>
                                     </nav>
                                 </div>
                             </div>
@@ -286,7 +295,7 @@
                         </p>
                         <div class="mt-6">
                             <Link
-                                :href="route('warehouse.requests.create')"
+                                :href="safeRoute('warehouse.requests.create')"
                                 class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
                             >
                                 <svg class="-ml-1 mr-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -373,7 +382,7 @@
                             <p v-if="selectedRequest.supplier_info"><strong>Fornitore:</strong> {{ selectedRequest.supplier_info }}</p>
                         </div>
                     </div>
-                    <div v-if="$page.props.auth.user.role === 'admin'">
+                    <div v-if="isAdmin">
                         <label class="text-sm font-medium text-gray-700">Richiesto da:</label>
                         <p class="text-sm text-gray-900">{{ selectedRequest.user.name }}</p>
                     </div>
@@ -418,11 +427,12 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
-import { router } from '@inertiajs/vue3'
+import { ref, computed, onMounted } from 'vue'
+import { router, usePage } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import { Link } from '@inertiajs/vue3'
 import Modal from '@/Components/Modal.vue'
+import DebugLogger, { safeRouteWithLogging } from '@/utils/debug-logger.js'
 
 const props = defineProps({
     requests: Object,
@@ -431,6 +441,23 @@ const props = defineProps({
     users: Array,
     filters: Object,
     auth: Object,
+})
+
+// Accesso alla pagina corrente tramite usePage()
+const page = usePage()
+
+// Log di debug per il component
+onMounted(() => {
+    DebugLogger.info('Requests.vue mounted')
+    DebugLogger.checkProps('Requests.vue', props)
+    DebugLogger.checkPageProps('Requests.vue', page)
+    DebugLogger.checkRouter('Requests.vue')
+    
+    // Verifichiamo le route specifiche
+    DebugLogger.checkRoute('warehouse.requests')
+    DebugLogger.checkRoute('warehouse.requests.approve', 1) // Test con un ID
+    DebugLogger.checkRoute('warehouse.requests.reject', 1)
+    DebugLogger.checkRoute('warehouse.requests.return', 1)
 })
 
 // State
@@ -443,20 +470,63 @@ const selectedRequest = ref(null)
 const rejectReason = ref('')
 
 // Computed
+const currentUser = computed(() => {
+    return page.props.auth?.user || null
+})
+
+const isAdmin = computed(() => {
+    return currentUser.value?.role === 'admin'
+})
+
+// Computed
 const hasFilters = computed(() => {
     return selectedStatus.value || selectedPriority.value || selectedUser.value
 })
 
 // Methods
+const safeRoute = (name, params = {}) => {
+    DebugLogger.log(`safeRoute called in Requests.vue`, { name, params })
+    
+    try {
+        // Verifichiamo se la funzione route è disponibile
+        if (typeof route === 'undefined') {
+            DebugLogger.error(`Route function is undefined in Requests.vue for ${name}`)
+            return '#';
+        }
+
+        if (route === null) {
+            DebugLogger.error(`Route function is null in Requests.vue for ${name}`)
+            return '#';
+        }
+
+        const routeResult = route(name, params);
+        
+        if (routeResult === null || routeResult === undefined) {
+            DebugLogger.warn(`Route ${name} returned null/undefined in Requests.vue`, { result: routeResult, params })
+            return '#';
+        }
+
+        DebugLogger.log(`Route ${name} successful in Requests.vue`, { result: routeResult, params })
+        return routeResult;
+        
+    } catch (error) {
+        DebugLogger.error(`Exception in safeRoute for ${name} in Requests.vue`, { error, params })
+        return '#';
+    }
+}
+
 const applyFilters = () => {
-    router.get(route('warehouse.requests'), {
-        status: selectedStatus.value,
-        priority: selectedPriority.value,
-        user: selectedUser.value
-    }, {
-        preserveState: true,
-        preserveScroll: true
-    })
+    const requestsRoute = safeRoute('warehouse.requests');
+    if (requestsRoute !== '#') {
+        router.get(requestsRoute, {
+            status: selectedStatus.value,
+            priority: selectedPriority.value,
+            user: selectedUser.value
+        }, {
+            preserveState: true,
+            preserveScroll: true
+        })
+    }
 }
 
 const clearFilters = () => {
@@ -467,21 +537,41 @@ const clearFilters = () => {
 }
 
 const approveRequest = (request) => {
+    DebugLogger.log('approveRequest called', { request: request.id, userRole: props.auth?.user?.role })
+    
     if (confirm('Confermi di voler approvare questa richiesta?')) {
         // Verifica che l'utente sia admin prima di procedere
         if (props.auth?.user?.role !== 'admin') {
+            DebugLogger.warn('Non-admin user trying to approve request', { userRole: props.auth?.user?.role })
             alert('Non hai i permessi per questa azione')
             return
         }
         
-        router.patch(route('warehouse.requests.approve', request.id), {}, {
-            onSuccess: () => {
-                // La pagina si ricaricherà automaticamente
-            },
-            onError: (errors) => {
-                alert('Errore durante l\'approvazione: ' + Object.values(errors).join(', '))
-            }
-        })
+        const approveRoute = safeRoute('warehouse.requests.approve', request.id);
+        DebugLogger.log('Approve route result', { route: approveRoute, requestId: request.id })
+        
+        if (approveRoute !== '#') {
+            DebugLogger.log('Executing router.patch for approve')
+            
+            router.patch(approveRoute, {}, {
+                onStart: () => {
+                    DebugLogger.log('Approve request started')
+                },
+                onSuccess: () => {
+                    DebugLogger.log('Approve request successful')
+                },
+                onError: (errors) => {
+                    DebugLogger.error('Approve request error', errors)
+                    alert('Errore durante l\'approvazione: ' + Object.values(errors).join(', '))
+                },
+                onFinish: () => {
+                    DebugLogger.log('Approve request finished')
+                }
+            })
+        } else {
+            DebugLogger.warn('Approve route not available')
+            alert('Funzione non disponibile per il tuo ruolo')
+        }
     }
 }
 
@@ -509,18 +599,23 @@ const rejectRequest = () => {
         return
     }
     
-    router.patch(route('warehouse.requests.reject', selectedRequest.value.id), {
-        rejection_reason: rejectReason.value
-    }, {
-        onSuccess: () => {
-            showingRejectModal.value = false
-            selectedRequest.value = null
-            rejectReason.value = ''
-        },
-        onError: (errors) => {
-            alert('Errore durante il rifiuto: ' + Object.values(errors).join(', '))
-        }
-    })
+    const rejectRoute = safeRoute('warehouse.requests.reject', selectedRequest.value.id);
+    if (rejectRoute !== '#') {
+        router.patch(rejectRoute, {
+            rejection_reason: rejectReason.value
+        }, {
+            onSuccess: () => {
+                showingRejectModal.value = false
+                selectedRequest.value = null
+                rejectReason.value = ''
+            },
+            onError: (errors) => {
+                alert('Errore durante il rifiuto: ' + Object.values(errors).join(', '))
+            }
+        })
+    } else {
+        alert('Funzione non disponibile per il tuo ruolo')
+    }
 }
 
 const markAsReturned = (request) => {
@@ -531,14 +626,19 @@ const markAsReturned = (request) => {
             return
         }
         
-        router.patch(route('warehouse.requests.return', request.id), {}, {
-            onSuccess: () => {
-                // La pagina si ricaricherà automaticamente
-            },
-            onError: (errors) => {
-                alert('Errore durante l\'operazione: ' + Object.values(errors).join(', '))
-            }
-        })
+        const returnRoute = safeRoute('warehouse.requests.return', request.id);
+        if (returnRoute !== '#') {
+            router.patch(returnRoute, {}, {
+                onSuccess: () => {
+                    // La pagina si ricaricherà automaticamente
+                },
+                onError: (errors) => {
+                    alert('Errore durante l\'operazione: ' + Object.values(errors).join(', '))
+                }
+            })
+        } else {
+            alert('Funzione non disponibile per il tuo ruolo')
+        }
     }
 }
 

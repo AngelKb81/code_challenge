@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug JavaScript Test</title>
+</head>
+<body>
+    <h1>Test Debug Logs</h1>
+    <div id="output"></div>
+    
+    <script>
+        // Test di base per verificare che i log funzionino
+        console.log('[TEST] Pagina di test caricata');
+        
+        // Simula un errore per testare il global error handler
+        setTimeout(() => {
+            console.log('[TEST] Simulando errore...');
+            // Questo dovrebbe triggera il global error handler
+            window.nonExistentFunction();
+        }, 2000);
+        
+        // Test della funzione route
+        setTimeout(() => {
+            console.log('[TEST] Testando funzione route...');
+            console.log('[TEST] typeof route:', typeof route);
+            console.log('[TEST] route value:', route);
+            
+            if (typeof route !== 'undefined') {
+                try {
+                    const result = route('warehouse.items');
+                    console.log('[TEST] route() result:', result);
+                } catch (error) {
+                    console.log('[TEST] route() error:', error);
+                }
+            }
+        }, 1000);
+    </script>
+</body>
+</html>
