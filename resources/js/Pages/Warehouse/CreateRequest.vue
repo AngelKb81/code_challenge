@@ -26,9 +26,66 @@
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-8">
                         <form @submit.prevent="submit">
+                            <!-- Selezione Tipo Richiesta -->
+                            <div class="mb-6">
+                                <label class="block text-sm font-medium text-gray-700 mb-3">
+                                    Tipo di Richiesta *
+                                </label>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div 
+                                        @click="form.request_type = 'existing_item'"
+                                        :class="[
+                                            'border-2 rounded-lg p-4 cursor-pointer transition-all',
+                                            form.request_type === 'existing_item' 
+                                                ? 'border-blue-500 bg-blue-50' 
+                                                : 'border-gray-300 hover:border-gray-400'
+                                        ]"
+                                    >
+                                        <div class="flex items-center">
+                                            <input 
+                                                type="radio" 
+                                                value="existing_item" 
+                                                v-model="form.request_type"
+                                                class="mr-3"
+                                            >
+                                            <div>
+                                                <h3 class="font-semibold text-gray-900">Richiesta Item Esistente</h3>
+                                                <p class="text-sm text-gray-600">Richiedi l'uso temporaneo di un articolo già in magazzino</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div 
+                                        @click="form.request_type = 'purchase_request'"
+                                        :class="[
+                                            'border-2 rounded-lg p-4 cursor-pointer transition-all',
+                                            form.request_type === 'purchase_request' 
+                                                ? 'border-green-500 bg-green-50' 
+                                                : 'border-gray-300 hover:border-gray-400'
+                                        ]"
+                                    >
+                                        <div class="flex items-center">
+                                            <input 
+                                                type="radio" 
+                                                value="purchase_request" 
+                                                v-model="form.request_type"
+                                                class="mr-3"
+                                            >
+                                            <div>
+                                                <h3 class="font-semibold text-gray-900">Richiesta Acquisto</h3>
+                                                <p class="text-sm text-gray-600">Richiedi l'acquisto di un nuovo articolo non presente in magazzino</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div v-if="form.errors.request_type" class="mt-1 text-sm text-red-600">
+                                    {{ form.errors.request_type }}
+                                </div>
+                            </div>
+
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <!-- Selezione Articolo -->
-                                <div class="md:col-span-2">
+                                <!-- Selezione Articolo (solo per existing_item) -->
+                                <div v-if="form.request_type === 'existing_item'" class="md:col-span-2">
                                     <label for="item_id" class="block text-sm font-medium text-gray-700 mb-2">
                                         Articolo Richiesto *
                                     </label>
@@ -82,39 +139,179 @@
                                     </div>
                                 </div>
 
-                                <!-- Data Inizio -->
-                                <div>
-                                    <label for="start_date" class="block text-sm font-medium text-gray-700 mb-2">
-                                        Data Inizio *
-                                    </label>
-                                    <input
-                                        id="start_date"
-                                        type="date"
-                                        v-model="form.start_date"
-                                        :min="today"
-                                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                        required
-                                    >
-                                    <div v-if="form.errors.start_date" class="mt-1 text-sm text-red-600">
-                                        {{ form.errors.start_date }}
+                                <!-- Campi per Purchase Request -->
+                                <div v-if="form.request_type === 'purchase_request'" class="md:col-span-2 space-y-4">
+                                    <h4 class="font-medium text-green-900 border-b border-green-200 pb-2">Dettagli Item da Acquistare</h4>
+                                    
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <!-- Nome Item -->
+                                        <div>
+                                            <label for="item_name" class="block text-sm font-medium text-gray-700 mb-2">
+                                                Nome Articolo *
+                                            </label>
+                                            <input
+                                                id="item_name"
+                                                type="text"
+                                                v-model="form.item_name"
+                                                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                                placeholder="Es. Monitor 4K Dell"
+                                                required
+                                            >
+                                            <div v-if="form.errors.item_name" class="mt-1 text-sm text-red-600">
+                                                {{ form.errors.item_name }}
+                                            </div>
+                                        </div>
+
+                                        <!-- Categoria -->
+                                        <div>
+                                            <label for="item_category" class="block text-sm font-medium text-gray-700 mb-2">
+                                                Categoria *
+                                            </label>
+                                            <select
+                                                id="item_category"
+                                                v-model="form.item_category"
+                                                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                                required
+                                            >
+                                                <option value="">Seleziona categoria...</option>
+                                                <option v-for="category in categories" :key="category" :value="category">
+                                                    {{ category }}
+                                                </option>
+                                                <option value="Altra">Altra categoria</option>
+                                            </select>
+                                            <div v-if="form.errors.item_category" class="mt-1 text-sm text-red-600">
+                                                {{ form.errors.item_category }}
+                                            </div>
+                                        </div>
+
+                                        <!-- Brand -->
+                                        <div>
+                                            <label for="item_brand" class="block text-sm font-medium text-gray-700 mb-2">
+                                                Brand (opzionale)
+                                            </label>
+                                            <input
+                                                id="item_brand"
+                                                type="text"
+                                                v-model="form.item_brand"
+                                                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                                placeholder="Es. Dell, Apple, HP"
+                                            >
+                                            <div v-if="form.errors.item_brand" class="mt-1 text-sm text-red-600">
+                                                {{ form.errors.item_brand }}
+                                            </div>
+                                        </div>
+
+                                        <!-- Costo Stimato -->
+                                        <div>
+                                            <label for="estimated_cost" class="block text-sm font-medium text-gray-700 mb-2">
+                                                Costo Stimato (€) *
+                                            </label>
+                                            <input
+                                                id="estimated_cost"
+                                                type="number"
+                                                step="0.01"
+                                                min="0"
+                                                v-model="form.estimated_cost"
+                                                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                                placeholder="0.00"
+                                                required
+                                            >
+                                            <div v-if="form.errors.estimated_cost" class="mt-1 text-sm text-red-600">
+                                                {{ form.errors.estimated_cost }}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Descrizione Item -->
+                                    <div>
+                                        <label for="item_description" class="block text-sm font-medium text-gray-700 mb-2">
+                                            Descrizione Articolo *
+                                        </label>
+                                        <textarea
+                                            id="item_description"
+                                            v-model="form.item_description"
+                                            rows="3"
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                            placeholder="Descrivi dettagliatamente l'articolo richiesto, specifiche tecniche, dimensioni, etc."
+                                            required
+                                        ></textarea>
+                                        <div v-if="form.errors.item_description" class="mt-1 text-sm text-red-600">
+                                            {{ form.errors.item_description }}
+                                        </div>
+                                    </div>
+
+                                    <!-- Giustificazione -->
+                                    <div>
+                                        <label for="justification" class="block text-sm font-medium text-gray-700 mb-2">
+                                            Giustificazione Acquisto *
+                                        </label>
+                                        <textarea
+                                            id="justification"
+                                            v-model="form.justification"
+                                            rows="3"
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                            placeholder="Spiega perché è necessario acquistare questo articolo e come verrà utilizzato"
+                                            required
+                                        ></textarea>
+                                        <div v-if="form.errors.justification" class="mt-1 text-sm text-red-600">
+                                            {{ form.errors.justification }}
+                                        </div>
+                                    </div>
+
+                                    <!-- Info Fornitore -->
+                                    <div>
+                                        <label for="supplier_info" class="block text-sm font-medium text-gray-700 mb-2">
+                                            Info Fornitore (opzionale)
+                                        </label>
+                                        <textarea
+                                            id="supplier_info"
+                                            v-model="form.supplier_info"
+                                            rows="2"
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                            placeholder="Suggerimenti su fornitori o link a prodotti specifici"
+                                        ></textarea>
+                                        <div v-if="form.errors.supplier_info" class="mt-1 text-sm text-red-600">
+                                            {{ form.errors.supplier_info }}
+                                        </div>
                                     </div>
                                 </div>
 
-                                <!-- Data Fine -->
-                                <div>
-                                    <label for="end_date" class="block text-sm font-medium text-gray-700 mb-2">
-                                        Data Fine *
-                                    </label>
-                                    <input
-                                        id="end_date"
-                                        type="date"
-                                        v-model="form.end_date"
-                                        :min="form.start_date || today"
-                                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                        required
-                                    >
-                                    <div v-if="form.errors.end_date" class="mt-1 text-sm text-red-600">
-                                        {{ form.errors.end_date }}
+                                <!-- Date (solo per existing items) -->
+                                <div v-if="form.request_type === 'existing_item'" class="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <!-- Data Inizio -->
+                                    <div>
+                                        <label for="start_date" class="block text-sm font-medium text-gray-700 mb-2">
+                                            Data Inizio *
+                                        </label>
+                                        <input
+                                            id="start_date"
+                                            type="date"
+                                            v-model="form.start_date"
+                                            :min="today"
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                            required
+                                        >
+                                        <div v-if="form.errors.start_date" class="mt-1 text-sm text-red-600">
+                                            {{ form.errors.start_date }}
+                                        </div>
+                                    </div>
+
+                                    <!-- Data Fine -->
+                                    <div>
+                                        <label for="end_date" class="block text-sm font-medium text-gray-700 mb-2">
+                                            Data Fine *
+                                        </label>
+                                        <input
+                                            id="end_date"
+                                            type="date"
+                                            v-model="form.end_date"
+                                            :min="form.start_date || today"
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                            required
+                                        >
+                                        <div v-if="form.errors.end_date" class="mt-1 text-sm text-red-600">
+                                            {{ form.errors.end_date }}
+                                        </div>
                                     </div>
                                 </div>
 
@@ -139,8 +336,8 @@
                                     </div>
                                 </div>
 
-                                <!-- Quantità Richiesta -->
-                                <div>
+                                <!-- Quantità Richiesta - Existing Item -->
+                                <div v-if="form.request_type === 'existing_item'">
                                     <label for="quantity_requested" class="block text-sm font-medium text-gray-700 mb-2">
                                         Quantità Richiesta
                                     </label>
@@ -156,6 +353,24 @@
                                     <div v-if="selectedItem && (selectedItem?.available_quantity || 0) === 0" class="mt-1 text-sm text-red-600">
                                         Questo articolo non è attualmente disponibile
                                     </div>
+                                    <div v-if="form.errors.quantity_requested" class="mt-1 text-sm text-red-600">
+                                        {{ form.errors.quantity_requested }}
+                                    </div>
+                                </div>
+
+                                <!-- Quantità Richiesta - Purchase Request -->
+                                <div v-if="form.request_type === 'purchase_request'">
+                                    <label for="quantity_requested_purchase" class="block text-sm font-medium text-gray-700 mb-2">
+                                        Quantità Richiesta
+                                    </label>
+                                    <input
+                                        id="quantity_requested_purchase"
+                                        type="number"
+                                        v-model="form.quantity_requested"
+                                        min="1"
+                                        max="100"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                    >
                                     <div v-if="form.errors.quantity_requested" class="mt-1 text-sm text-red-600">
                                         {{ form.errors.quantity_requested }}
                                     </div>
@@ -206,13 +421,24 @@
                             </div>
 
                             <!-- Riepilogo Durata -->
-                            <div v-if="form.start_date && form.end_date" class="mt-6 bg-gray-50 p-4 rounded-lg">
+                            <div v-if="(form.request_type === 'existing_item' && form.start_date && form.end_date) || (form.request_type === 'purchase_request' && (form.item_name || form.reason))" class="mt-6 bg-gray-50 p-4 rounded-lg">
                                 <h4 class="font-medium text-gray-900 mb-2">Riepilogo Richiesta</h4>
                                 <div class="text-sm text-gray-700">
-                                    <p><strong>Durata:</strong> {{ calculateDuration() }} giorni</p>
-                                    <p><strong>Dal:</strong> {{ formatDate(form.start_date) }}</p>
-                                    <p><strong>Al:</strong> {{ formatDate(form.end_date) }}</p>
-                                    <p v-if="selectedItem"><strong>Articolo:</strong> {{ selectedItem.name }}</p>
+                                    <p v-if="form.request_type === 'existing_item' && form.start_date && form.end_date">
+                                        <strong>Durata:</strong> {{ calculateDuration() }} giorni
+                                    </p>
+                                    <p v-if="form.request_type === 'existing_item' && form.start_date && form.end_date">
+                                        <strong>Dal:</strong> {{ formatDate(form.start_date) }} <strong>al:</strong> {{ formatDate(form.end_date) }}
+                                    </p>
+                                    <p v-if="form.request_type === 'existing_item' && selectedItem">
+                                        <strong>Articolo:</strong> {{ selectedItem.name }}
+                                    </p>
+                                    <p v-if="form.request_type === 'purchase_request' && form.item_name">
+                                        <strong>Articolo:</strong> {{ form.item_name }}
+                                    </p>
+                                    <p v-if="form.request_type === 'purchase_request' && form.estimated_cost">
+                                        <strong>Costo Stimato:</strong> €{{ form.estimated_cost }}
+                                    </p>
                                     <p><strong>Priorità:</strong> {{ getPriorityLabel(form.priority) }}</p>
                                 </div>
                             </div>
@@ -274,11 +500,22 @@ import { Link } from '@inertiajs/vue3'
 
 const props = defineProps({
     availableItems: Array,
+    categories: Array,
 })
 
 // Form data
 const form = useForm({
+    request_type: 'existing_item',
     item_id: '',
+    // Campi per purchase request
+    item_name: '',
+    item_description: '',
+    item_category: '',
+    item_brand: '',
+    estimated_cost: '',
+    supplier_info: '',
+    justification: '',
+    // Campi comuni
     start_date: '',
     end_date: '',
     reason: '',
@@ -295,6 +532,14 @@ const today = computed(() => {
     return new Date().toISOString().split('T')[0]
 })
 
+const isExistingItemRequest = computed(() => {
+    return form.request_type === 'existing_item'
+})
+
+const isPurchaseRequest = computed(() => {
+    return form.request_type === 'purchase_request'
+})
+
 // Methods
 const onItemSelected = () => {
     selectedItem.value = props.availableItems.find(item => item.id == form.item_id) || null
@@ -304,27 +549,67 @@ const onItemSelected = () => {
 }
 
 const submit = () => {
-    // Validazione frontend aggiuntiva
-    if (!selectedItem.value) {
-        alert('Seleziona un articolo prima di procedere');
-        return;
-    }
-    
-    if ((selectedItem.value.available_quantity || 0) === 0) {
-        alert('L\'articolo selezionato non è attualmente disponibile');
-        return;
-    }
-    
-    if (form.quantity_requested > (selectedItem.value.available_quantity || 0)) {
-        alert(`Quantità non disponibile. Massimo ${selectedItem.value.available_quantity || 0} unità`);
-        return;
+    // Reset campi non necessari in base al tipo di richiesta
+    if (form.request_type === 'existing_item') {
+        // Validazione per item esistente
+        if (!selectedItem.value) {
+            alert('Seleziona un articolo prima di procedere');
+            return;
+        }
+        
+        if ((selectedItem.value.available_quantity || 0) === 0) {
+            alert('L\'articolo selezionato non è attualmente disponibile');
+            return;
+        }
+        
+        if (form.quantity_requested > (selectedItem.value.available_quantity || 0)) {
+            alert(`Quantità non disponibile. Massimo ${selectedItem.value.available_quantity || 0} unità`);
+            return;
+        }
+        
+        // Reset campi per purchase request
+        form.item_name = '';
+        form.item_description = '';
+        form.item_category = '';
+        form.item_brand = '';
+        form.estimated_cost = '';
+        form.supplier_info = '';
+        form.justification = '';
+    } else {
+        // Validazione per purchase request
+        if (!form.item_name.trim()) {
+            alert('Il nome dell\'articolo è obbligatorio per le richieste di acquisto');
+            return;
+        }
+        
+        if (!form.item_description.trim()) {
+            alert('La descrizione dell\'articolo è obbligatoria per le richieste di acquisto');
+            return;
+        }
+        
+        if (!form.item_category.trim()) {
+            alert('La categoria è obbligatoria per le richieste di acquisto');
+            return;
+        }
+        
+        if (!form.justification.trim()) {
+            alert('La giustificazione è obbligatoria per le richieste di acquisto');
+            return;
+        }
+        
+        // Reset campo per existing item
+        form.item_id = '';
+        
+        // Reset date per purchase request (non necessarie)
+        form.start_date = '';
+        form.end_date = '';
     }
     
     form.post(route('warehouse.requests.store'), {
         onSuccess: () => {
-            // Redirect will be handled by Laravel
+            form.reset();
         }
-    })
+    });
 }
 
 const calculateDuration = () => {

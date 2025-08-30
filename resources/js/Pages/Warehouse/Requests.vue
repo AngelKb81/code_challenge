@@ -116,7 +116,23 @@
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <div>
                                             <div class="text-sm font-medium text-gray-900">
-                                                {{ request.item.name }}
+                                                <span v-if="request.request_type === 'existing_item' && request.item">
+                                                    {{ request.item.name }}
+                                                </span>
+                                                <span v-else-if="request.request_type === 'purchase_request'">
+                                                    {{ request.item_name }}
+                                                </span>
+                                                <span v-else class="text-gray-400 italic">
+                                                    Nome non disponibile
+                                                </span>
+                                            </div>
+                                            <div class="text-xs text-blue-600 font-medium">
+                                                <span v-if="request.request_type === 'existing_item'">
+                                                    📦 Articolo Esistente
+                                                </span>
+                                                <span v-else-if="request.request_type === 'purchase_request'">
+                                                    🛒 Richiesta Acquisto
+                                                </span>
                                             </div>
                                             <div class="text-sm text-gray-500">
                                                 {{ request.reason }}
@@ -329,8 +345,33 @@
                 </h3>
                 <div class="space-y-3">
                     <div>
+                        <label class="text-sm font-medium text-gray-700">Tipo Richiesta:</label>
+                        <p class="text-sm text-gray-900">
+                            <span v-if="selectedRequest.request_type === 'existing_item'" class="inline-flex items-center text-blue-600">
+                                📦 Articolo Esistente
+                            </span>
+                            <span v-else-if="selectedRequest.request_type === 'purchase_request'" class="inline-flex items-center text-green-600">
+                                🛒 Richiesta Acquisto
+                            </span>
+                        </p>
+                    </div>
+                    <div>
                         <label class="text-sm font-medium text-gray-700">Articolo:</label>
-                        <p class="text-sm text-gray-900">{{ selectedRequest.item.name }}</p>
+                        <p class="text-sm text-gray-900">
+                            <span v-if="selectedRequest.request_type === 'existing_item' && selectedRequest.item">
+                                {{ selectedRequest.item.name }}
+                            </span>
+                            <span v-else-if="selectedRequest.request_type === 'purchase_request'">
+                                {{ selectedRequest.item_name }}
+                            </span>
+                        </p>
+                        <div v-if="selectedRequest.request_type === 'purchase_request'" class="mt-2 text-sm text-gray-600">
+                            <p v-if="selectedRequest.item_description"><strong>Descrizione:</strong> {{ selectedRequest.item_description }}</p>
+                            <p v-if="selectedRequest.item_category"><strong>Categoria:</strong> {{ selectedRequest.item_category }}</p>
+                            <p v-if="selectedRequest.item_brand"><strong>Brand:</strong> {{ selectedRequest.item_brand }}</p>
+                            <p v-if="selectedRequest.estimated_cost"><strong>Costo Stimato:</strong> €{{ selectedRequest.estimated_cost }}</p>
+                            <p v-if="selectedRequest.supplier_info"><strong>Fornitore:</strong> {{ selectedRequest.supplier_info }}</p>
+                        </div>
                     </div>
                     <div v-if="$page.props.auth.user.role === 'admin'">
                         <label class="text-sm font-medium text-gray-700">Richiesto da:</label>
@@ -345,6 +386,10 @@
                     <div>
                         <label class="text-sm font-medium text-gray-700">Motivo:</label>
                         <p class="text-sm text-gray-900">{{ selectedRequest.reason }}</p>
+                    </div>
+                    <div v-if="selectedRequest.request_type === 'purchase_request' && selectedRequest.justification">
+                        <label class="text-sm font-medium text-gray-700">Giustificazione Acquisto:</label>
+                        <p class="text-sm text-gray-900">{{ selectedRequest.justification }}</p>
                     </div>
                     <div v-if="selectedRequest.notes">
                         <label class="text-sm font-medium text-gray-700">Note:</label>

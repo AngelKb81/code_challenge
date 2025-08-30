@@ -136,8 +136,11 @@ class WarehouseController extends Controller
             })
             ->values(); // Reset keys after filter
 
+        $categories = Item::distinct()->pluck('category')->sort()->values();
+
         return Inertia::render('Warehouse/CreateRequest', [
             'availableItems' => $availableItems,
+            'categories' => $categories,
         ]);
     }
 
@@ -146,32 +149,72 @@ class WarehouseController extends Controller
      */
     public function storeRequest(HttpRequest $request)
     {
-        $validated = $request->validate([
-            'item_id' => 'required|exists:items,id',
-            'start_date' => 'required|date|after_or_equal:today',
-            'end_date' => 'required|date|after:start_date',
+        // Validazione base comune
+        $baseRules = [
+            'request_type' => 'required|in:existing_item,purchase_request',
             'reason' => 'required|string|max:500',
             'notes' => 'nullable|string|max:1000',
             'priority' => 'required|in:low,medium,high,urgent',
             'quantity_requested' => 'required|integer|min:1',
-        ]);
+        ];
 
-        // Verifica disponibilità
-        $item = Item::findOrFail($validated['item_id']);
-        $availableQuantity = $item->getAvailableQuantity();
+        // Validazione specifica per tipo di richiesta
+        if ($request->input('request_type') === 'existing_item') {
+            $specificRules = [
+                'item_id' => 'required|exists:items,id',
+                'start_date' => 'required|date|after_or_equal:today',
+                'end_date' => 'required|date|after:start_date',
+            ];
+        } else { // purchase_request
+            $specificRules = [
+                'item_id' => 'nullable',
+                'item_name' => 'required|string|max:255',
+                'item_description' => 'required|string|max:1000',
+                'item_category' => 'required|string|max:100',
+                'item_brand' => 'nullable|string|max:100',
+                'estimated_cost' => 'required|numeric|min:0',
+                'supplier_info' => 'nullable|string|max:500',
+                'justification' => 'required|string|max:1000',
+                'start_date' => 'nullable|date|after_or_equal:today',
+                'end_date' => 'nullable|date|after:start_date',
+            ];
+        }
 
-        if ($validated['quantity_requested'] > $availableQuantity) {
-            return redirect()->back()
-                ->withInput()
-                ->withErrors(['quantity_requested' => "Quantità richiesta non disponibile. Disponibili: {$availableQuantity}"]);
+        $validated = $request->validate(array_merge($baseRules, $specificRules));
+
+        // Controlli specifici per item esistenti
+        if ($validated['request_type'] === 'existing_item') {
+            $item = Item::findOrFail($validated['item_id']);
+            $availableQuantity = $item->getAvailableQuantity();
+
+            if ($validated['quantity_requested'] > $availableQuantity) {
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors(['quantity_requested' => "Quantità richiesta non disponibile. Disponibili: {$availableQuantity}"]);
+            }
+
+            // Controllo sovrapposizioni temporali
+            if (\App\Models\Request::hasOverlappingRequests(
+                $validated['item_id'],
+                $validated['start_date'],
+                $validated['end_date']
+            )) {
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors(['start_date' => 'Il periodo richiesto si sovrappone con altre richieste approvate per questo item.']);
+            }
         }
 
         $validated['user_id'] = Auth::id();
 
-        Request::create($validated);
+        \App\Models\Request::create($validated);
+
+        $message = $validated['request_type'] === 'purchase_request'
+            ? 'Richiesta di acquisto inviata con successo! In attesa di valutazione.'
+            : 'Richiesta inviata con successo! In attesa di approvazione.';
 
         return redirect()->route('warehouse.requests')
-            ->with('success', 'Richiesta inviata con successo! In attesa di approvazione.');
+            ->with('success', $message);
     }
 
     /**

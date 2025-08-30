@@ -18,7 +18,15 @@ class Request extends Model
      */
     protected $fillable = [
         'user_id',
+        'request_type',
         'item_id',
+        'item_name',
+        'item_description',
+        'item_category',
+        'item_brand',
+        'estimated_cost',
+        'supplier_info',
+        'justification',
         'start_date',
         'end_date',
         'status',
@@ -42,6 +50,7 @@ class Request extends Model
         'end_date' => 'date',
         'approved_at' => 'datetime',
         'returned_at' => 'datetime',
+        'estimated_cost' => 'decimal:2',
     ];
 
     /**
@@ -178,6 +187,74 @@ class Request extends Model
     {
         return $query->whereBetween('start_date', [$startDate, $endDate])
             ->orWhereBetween('end_date', [$startDate, $endDate]);
+    }
+
+    /**
+     * Scope per richieste di item esistenti.
+     */
+    public function scopeExistingItems($query)
+    {
+        return $query->where('request_type', 'existing_item');
+    }
+
+    /**
+     * Scope per richieste di acquisto.
+     */
+    public function scopePurchaseRequests($query)
+    {
+        return $query->where('request_type', 'purchase_request');
+    }
+
+    /**
+     * Verifica se è una richiesta di acquisto.
+     */
+    public function isPurchaseRequest(): bool
+    {
+        return $this->request_type === 'purchase_request';
+    }
+
+    /**
+     * Verifica se è una richiesta per item esistente.
+     */
+    public function isExistingItemRequest(): bool
+    {
+        return $this->request_type === 'existing_item';
+    }
+
+    /**
+     * Ottiene il nome dell'item (dinamico in base al tipo).
+     */
+    public function getItemNameAttribute(): string
+    {
+        if ($this->isPurchaseRequest()) {
+            return $this->attributes['item_name'] ?? 'Item da acquistare';
+        }
+
+        return $this->item ? $this->item->name : 'Item non disponibile';
+    }
+
+    /**
+     * Controllo sovrapposizioni temporali per item esistenti.
+     */
+    public static function hasOverlappingRequests($itemId, $startDate, $endDate, $excludeRequestId = null)
+    {
+        $query = self::where('item_id', $itemId)
+            ->where('request_type', 'existing_item')
+            ->whereIn('status', ['approved', 'in_use'])
+            ->where(function ($q) use ($startDate, $endDate) {
+                $q->whereBetween('start_date', [$startDate, $endDate])
+                    ->orWhereBetween('end_date', [$startDate, $endDate])
+                    ->orWhere(function ($subQ) use ($startDate, $endDate) {
+                        $subQ->where('start_date', '<=', $startDate)
+                            ->where('end_date', '>=', $endDate);
+                    });
+            });
+
+        if ($excludeRequestId) {
+            $query->where('id', '!=', $excludeRequestId);
+        }
+
+        return $query->exists();
     }
 
     /**

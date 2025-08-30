@@ -31,65 +31,123 @@ class RequestApprovalService
                 ];
             }
 
-            // 2. Ricarica item con lock per prevenire race conditions
-            $item = Item::where('id', $request->item_id)->lockForUpdate()->first();
-
-            if (!$item) {
-                return [
-                    'success' => false,
-                    'message' => 'Articolo non trovato.',
-                    'rejected_requests' => []
-                ];
+            // 2. Gestione differenziata per tipo di richiesta
+            if ($request->request_type === 'purchase_request') {
+                return $this->approvePurchaseRequest($request, $adminUserId);
+            } else {
+                return $this->approveExistingItemRequest($request, $adminUserId);
             }
-
-            // 3. Calcola quantità disponibile corrente
-            $currentAvailable = $item->getAvailableQuantity();
-            $requestedQuantity = $request->quantity_requested ?? 1;
-
-            // 4. Verifica disponibilità
-            if ($currentAvailable < $requestedQuantity) {
-                return [
-                    'success' => false,
-                    'message' => "Quantità insufficiente. Disponibili: {$currentAvailable}, Richieste: {$requestedQuantity}",
-                    'rejected_requests' => []
-                ];
-            }
-
-            // 5. Approva la richiesta corrente
-            $request->update([
-                'status' => 'approved',
-                'approved_by' => $adminUserId,
-                'approved_at' => now(),
-            ]);
-
-            // 6. Calcola nuova quantità disponibile dopo l'approvazione
-            $newAvailable = $currentAvailable - $requestedQuantity;
-
-            // 7. Gestisci richieste concorrenti se necessario
-            $rejectedRequests = [];
-            if ($newAvailable >= 0) {
-                $rejectedRequests = $this->rejectExcessPendingRequests($item, $newAvailable);
-            }
-
-            // 8. Aggiorna status dell'item
-            $item->calculateAndUpdateStatus();
-
-            // 9. Log dell'operazione
-            Log::info('Request approved', [
-                'request_id' => $request->id,
-                'item_id' => $item->id,
-                'admin_id' => $adminUserId,
-                'quantity_requested' => $requestedQuantity,
-                'available_after' => $newAvailable,
-                'rejected_requests' => count($rejectedRequests)
-            ]);
-
-            return [
-                'success' => true,
-                'message' => $this->buildSuccessMessage($request, $rejectedRequests),
-                'rejected_requests' => $rejectedRequests
-            ];
         });
+    }
+
+    /**
+     * Approve a purchase request and create new item.
+     */
+    private function approvePurchaseRequest(Request $request, int $adminUserId): array
+    {
+        // 1. Crea il nuovo item nell'inventario
+        $newItem = Item::create([
+            'name' => $request->item_name,
+            'description' => $request->item_description ?? 'Nuovo item da richiesta d\'acquisto',
+            'category' => $request->item_category ?? 'Generale',
+            'brand' => $request->item_brand ?? 'N/A',
+            'quantity' => $request->quantity_requested,
+            'location' => 'Da assegnare', // Valore di default
+            'status' => 'available',
+            'purchase_price' => $request->estimated_cost,
+            'purchase_date' => now(),
+            'supplier' => $request->supplier_info ?? 'N/A',
+            'notes' => "Creato da richiesta di acquisto #{$request->id}. " . ($request->justification ?? $request->notes ?? ''),
+        ]);
+
+        // 2. Approva la richiesta e collega al nuovo item
+        $request->update([
+            'item_id' => $newItem->id,
+            'status' => 'approved',
+            'approved_by' => $adminUserId,
+            'approved_at' => now(),
+        ]);
+
+        // 3. Log dell'operazione
+        Log::info('Purchase request approved and item created', [
+            'request_id' => $request->id,
+            'new_item_id' => $newItem->id,
+            'item_name' => $newItem->name,
+            'quantity' => $newItem->quantity,
+            'admin_id' => $adminUserId
+        ]);
+
+        return [
+            'success' => true,
+            'message' => "Richiesta di acquisto approvata! Nuovo articolo '{$newItem->name}' aggiunto all'inventario con {$newItem->quantity} unità.",
+            'rejected_requests' => [],
+            'created_item' => $newItem
+        ];
+    }
+
+    /**
+     * Approve an existing item request.
+     */
+    private function approveExistingItemRequest(Request $request, int $adminUserId): array
+    {
+        // Ricarica item con lock per prevenire race conditions
+        $item = Item::where('id', $request->item_id)->lockForUpdate()->first();
+
+        if (!$item) {
+            return [
+                'success' => false,
+                'message' => 'Articolo non trovato.',
+                'rejected_requests' => []
+            ];
+        }
+
+        // Calcola quantità disponibile corrente
+        $currentAvailable = $item->getAvailableQuantity();
+        $requestedQuantity = $request->quantity_requested ?? 1;
+
+        // Verifica disponibilità
+        if ($currentAvailable < $requestedQuantity) {
+            return [
+                'success' => false,
+                'message' => "Quantità insufficiente. Disponibili: {$currentAvailable}, Richieste: {$requestedQuantity}",
+                'rejected_requests' => []
+            ];
+        }
+
+        // Approva la richiesta corrente
+        $request->update([
+            'status' => 'approved',
+            'approved_by' => $adminUserId,
+            'approved_at' => now(),
+        ]);
+
+        // Calcola nuova quantità disponibile dopo l'approvazione
+        $newAvailable = $currentAvailable - $requestedQuantity;
+
+        // Gestisci richieste concorrenti se necessario
+        $rejectedRequests = [];
+        if ($newAvailable >= 0) {
+            $rejectedRequests = $this->rejectExcessPendingRequests($item, $newAvailable);
+        }
+
+        // Aggiorna status dell'item
+        $item->calculateAndUpdateStatus();
+
+        // Log dell'operazione
+        Log::info('Request approved', [
+            'request_id' => $request->id,
+            'item_id' => $item->id,
+            'admin_id' => $adminUserId,
+            'quantity_requested' => $requestedQuantity,
+            'available_after' => $newAvailable,
+            'rejected_requests' => count($rejectedRequests)
+        ]);
+
+        return [
+            'success' => true,
+            'message' => $this->buildSuccessMessage($request, $rejectedRequests),
+            'rejected_requests' => $rejectedRequests
+        ];
     }
 
     /**

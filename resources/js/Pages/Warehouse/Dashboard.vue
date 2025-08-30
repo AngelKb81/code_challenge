@@ -208,7 +208,15 @@
                                             {{ request.user.name }}
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            {{ request.item.name }}
+                                            <span v-if="request.request_type === 'existing_item' && request.item">
+                                                {{ request.item.name }}
+                                            </span>
+                                            <span v-else-if="request.request_type === 'purchase_request'">
+                                                {{ request.item_name }} <span class="text-xs text-blue-600">(Acquisto)</span>
+                                            </span>
+                                            <span v-else class="text-gray-400 italic">
+                                                Nome non disponibile
+                                            </span>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                             {{ formatDate(request.created_at) }}

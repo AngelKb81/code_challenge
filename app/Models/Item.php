@@ -157,11 +157,13 @@ class Item extends Model
     /**
      * Get available quantity (considering approved requests).
      * This is the core method for availability calculation.
+     * Excludes purchase_request type as they add items to inventory rather than remove them.
      */
     public function getAvailableQuantityAttribute(): int
     {
         $approvedQuantity = $this->requests()
             ->where('status', 'approved')
+            ->where('request_type', 'existing_item') // Solo richieste per item esistenti
             ->sum('quantity_requested');
 
         return max(0, $this->quantity - $approvedQuantity);
