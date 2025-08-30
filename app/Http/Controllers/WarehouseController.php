@@ -159,32 +159,32 @@ class WarehouseController extends Controller
     /**
      * Approve a request (Admin only).
      */
-    public function approveRequest(Request $warehouseRequest)
+    public function approveRequest(\App\Models\Request $request)
     {
         abort_unless(Auth::user()->isAdmin(), 403);
 
-        $warehouseRequest->update([
+        $request->update([
             'status' => 'approved',
             'approved_by' => Auth::id(),
             'approved_at' => now(),
         ]);
 
         return redirect()->back()
-            ->with('success', 'Richiesta approvata con successo!');
+            ->with('success', 'Richiesta approvata con successo! L\'utente è stato notificato.');
     }
 
     /**
      * Reject a request (Admin only).
      */
-    public function rejectRequest(HttpRequest $request, Request $warehouseRequest)
+    public function rejectRequest(HttpRequest $httpRequest, \App\Models\Request $request)
     {
         abort_unless(Auth::user()->isAdmin(), 403);
 
-        $validated = $request->validate([
+        $validated = $httpRequest->validate([
             'rejection_reason' => 'required|string|max:500',
         ]);
 
-        $warehouseRequest->update([
+        $request->update([
             'status' => 'rejected',
             'approved_by' => Auth::id(),
             'approved_at' => now(),
@@ -192,23 +192,23 @@ class WarehouseController extends Controller
         ]);
 
         return redirect()->back()
-            ->with('success', 'Richiesta rifiutata.');
+            ->with('success', 'Richiesta rifiutata. L\'utente è stato notificato del motivo.');
     }
 
     /**
      * Mark a request as returned.
      */
-    public function returnRequest(Request $warehouseRequest)
+    public function returnRequest(\App\Models\Request $request)
     {
         abort_unless(Auth::user()->isAdmin(), 403);
 
-        $warehouseRequest->update([
+        $request->update([
             'status' => 'returned',
             'returned_at' => now(),
         ]);
 
         return redirect()->back()
-            ->with('success', 'Materiale contrassegnato come restituito.');
+            ->with('success', 'Articolo contrassegnato come restituito con successo.');
     }
 
     // =====================================
@@ -229,9 +229,9 @@ class WarehouseController extends Controller
             $search = $request->get('search');
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('brand', 'like', "%{$search}%")
-                  ->orWhere('category', 'like', "%{$search}%")
-                  ->orWhere('serial_number', 'like', "%{$search}%");
+                    ->orWhere('brand', 'like', "%{$search}%")
+                    ->orWhere('category', 'like', "%{$search}%")
+                    ->orWhere('serial_number', 'like', "%{$search}%");
             });
         }
 

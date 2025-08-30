@@ -18,9 +18,64 @@
                                 Dashboard
                             </NavLink>
                             <template v-if="$page.props.auth.user">
-                                <NavLink :href="route('warehouse.index')" :active="route().current('warehouse.*')">
-                                    Magazzino
-                                </NavLink>
+                                <!-- Dropdown Magazzino -->
+                                <div class="relative" @mouseenter="showWarehouseMenu = true" @mouseleave="showWarehouseMenu = false">
+                                    <NavLink :href="route('warehouse.index')" :active="route().current('warehouse.*')" class="flex items-center">
+                                        Magazzino
+                                        <svg class="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    </NavLink>
+                                    <!-- Dropdown Menu -->
+                                    <div v-show="showWarehouseMenu" class="absolute left-0 mt-1 w-56 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-50">
+                                        <div class="py-1">
+                                            <Link :href="route('warehouse.index')" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                                <svg class="inline w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5a2 2 0 012-2h2a2 2 0 012 2v2H8V5z" />
+                                                </svg>
+                                                Dashboard Magazzino
+                                            </Link>
+                                            <Link :href="route('warehouse.items')" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                                <svg class="inline w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                                                </svg>
+                                                Visualizza Inventario
+                                            </Link>
+                                            <Link :href="route('warehouse.requests')" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                                <svg class="inline w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                                                </svg>
+                                                {{ $page.props.auth.user.role === 'admin' ? 'Gestisci Richieste' : 'Le Mie Richieste' }}
+                                            </Link>
+                                            <Link :href="route('warehouse.requests.create')" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                                <svg class="inline w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                                </svg>
+                                                Nuova Richiesta
+                                            </Link>
+                                            <template v-if="$page.props.auth.user.role === 'admin'">
+                                                <hr class="my-1">
+                                                <div class="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    Amministrazione
+                                                </div>
+                                                <Link :href="route('warehouse.items.manage')" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                                    <svg class="inline w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                    </svg>
+                                                    Gestisci Articoli
+                                                </Link>
+                                                <Link :href="route('warehouse.items.create')" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                                    <svg class="inline w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                                    </svg>
+                                                    Nuovo Articolo
+                                                </Link>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </div>
                             </template>
                         </div>
                     </div>
@@ -74,9 +129,35 @@
                         Dashboard
                     </ResponsiveNavLink>
                     <template v-if="$page.props.auth.user">
-                        <ResponsiveNavLink :href="route('warehouse.index')" :active="route().current('warehouse.*')">
-                            Magazzino
-                        </ResponsiveNavLink>
+                        <!-- Magazzino Menu -->
+                        <div class="border-t border-gray-200 pt-2">
+                            <div class="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                Magazzino
+                            </div>
+                            <ResponsiveNavLink :href="route('warehouse.index')" :active="route().current('warehouse.index')">
+                                Dashboard Magazzino
+                            </ResponsiveNavLink>
+                            <ResponsiveNavLink :href="route('warehouse.items')" :active="route().current('warehouse.items')">
+                                Visualizza Inventario
+                            </ResponsiveNavLink>
+                            <ResponsiveNavLink :href="route('warehouse.requests')" :active="route().current('warehouse.requests')">
+                                {{ $page.props.auth.user.role === 'admin' ? 'Gestisci Richieste' : 'Le Mie Richieste' }}
+                            </ResponsiveNavLink>
+                            <ResponsiveNavLink :href="route('warehouse.requests.create')" :active="route().current('warehouse.requests.create')">
+                                Nuova Richiesta
+                            </ResponsiveNavLink>
+                            <template v-if="$page.props.auth.user.role === 'admin'">
+                                <div class="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                    Amministrazione
+                                </div>
+                                <ResponsiveNavLink :href="route('warehouse.items.manage')" :active="route().current('warehouse.items.manage')">
+                                    Gestisci Articoli
+                                </ResponsiveNavLink>
+                                <ResponsiveNavLink :href="route('warehouse.items.create')" :active="route().current('warehouse.items.create')">
+                                    Nuovo Articolo
+                                </ResponsiveNavLink>
+                            </template>
+                        </div>
                     </template>
                 </div>
 
@@ -129,6 +210,7 @@ export default {
     data() {
         return {
             showingNavigationDropdown: false,
+            showWarehouseMenu: false,
         }
     },
 }

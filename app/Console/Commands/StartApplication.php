@@ -117,13 +117,13 @@ class StartApplication extends Command
         try {
             // Prova a connettersi al database
             $this->call('migrate:status');
-            
+
             // Chiedi se ricaricare il database
             if ($this->confirm('Vuoi ricaricare il database con dati di esempio?', true)) {
                 $this->info('🔄 Ricarico database...');
                 $this->call('migrate:fresh', ['--seed' => true, '--force' => true]);
                 $this->info('✅ Database configurato e popolato');
-                
+
                 $this->line('');
                 $this->info('👥 UTENTI DI TEST (password: "password"):');
                 $this->line('   🔐 Admin: admin@example.com');
@@ -138,12 +138,12 @@ class StartApplication extends Command
             $this->line('2. Crea un database chiamato "code_challenge"');
             $this->line('3. Configura le credenziali in .env');
             $this->line('');
-            
+
             if (!$this->confirm('Hai configurato il database?')) {
                 $this->error('Configurazione database necessaria. Comando interrotto.');
                 exit(1);
             }
-            
+
             $this->setupDatabase(); // Riprova
         }
     }
@@ -151,13 +151,13 @@ class StartApplication extends Command
     private function clearCache()
     {
         $this->info('🧹 Pulisco cache...');
-        
+
         $commands = ['config:clear', 'route:clear', 'view:clear', 'cache:clear'];
-        
+
         foreach ($commands as $command) {
             $this->call($command);
         }
-        
+
         $this->info('✅ Cache pulita');
     }
 
@@ -175,11 +175,11 @@ class StartApplication extends Command
         $this->line('======================');
         $this->line('');
         $this->line('📍 URL Applicazione: http://localhost:8000');
-        
+
         if ($this->option('dev')) {
             $this->line('📍 Server Vite (dev): http://localhost:5173');
         }
-        
+
         $this->line('');
         $this->info('📦 DATI DI ESEMPIO:');
         $this->line('   ✓ 12 utenti creati');

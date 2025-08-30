@@ -1,9 +1,30 @@
 <template>
     <AppLayout>
         <template #header>
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                Inventario Magazzino
-            </h2>
+            <div class="flex justify-between items-center">
+                <div>
+                    <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+                        Inventario Magazzino
+                    </h2>
+                    <p class="text-gray-600 text-sm mt-1">
+                        Esplora tutti gli articoli disponibili in magazzino
+                    </p>
+                </div>
+                <div class="flex space-x-2">
+                    <Link 
+                        :href="route('warehouse.index')" 
+                        class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition duration-200"
+                    >
+                        ← Torna alla Dashboard
+                    </Link>
+                    <Link 
+                        :href="route('warehouse.requests.create')" 
+                        class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition duration-200"
+                    >
+                        + Nuova Richiesta
+                    </Link>
+                </div>
+            </div>
         </template>
 
         <div class="py-12">

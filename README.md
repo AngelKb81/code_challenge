@@ -1,23 +1,418 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# 📦 Code Challenge - Sistema Gestione Magazzino
+
+> **Web Application completa per la gestione del magazzino sviluppata con Laravel 11, Vue 3 e Inertia.js**
 
 <p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
+  <img src="https://img.shields.io/badge/Laravel-11-red?style=for-the-badge&logo=laravel" alt="Laravel 11">
+  <img src="https://img.shields.io/badge/Vue.js-3-green?style=for-the-badge&logo=vue.js" alt="Vue 3">
+  <img src="https://img.shields.io/badge/Inertia.js-2.1.3-purple?style=for-the-badge" alt="Inertia.js">
+  <img src="https://img.shields.io/badge/Tailwind-CSS-blue?style=for-the-badge&logo=tailwindcss" alt="Tailwind CSS">
+  <img src="https://img.shields.io/badge/MySQL-Database-orange?style=for-the-badge&logo=mysql" alt="MySQL">
 </p>
 
-## About Laravel
+## 🎯 **Panoramica Progetto**
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+Sistema completo di gestione magazzino con autenticazione basata su ruoli, interfaccia moderna e operazioni CRUD complete. Sviluppato come code challenge per dimostrare competenze full-stack moderne.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+### 🌟 **Caratteristiche Principali**
+
+- ✅ **Autenticazione Completa** - Sistema login/logout con gestione sessioni
+- ✅ **Gestione Ruoli** - Distinzione Admin/User con autorizzazioni granulari
+- ✅ **CRUD Magazzino** - Gestione completa articoli (solo Admin)
+- ✅ **Dashboard Interattiva** - Interfaccia responsiva e moderna
+- ✅ **SPA Experience** - Single Page Application con Inertia.js
+- ✅ **Dati Realistici** - Seeder con dati di esempio pronti all'uso
+- ✅ **Avvio Automatico** - Script per setup e lancio con un comando
+
+---
+
+## 🚀 **AVVIO RAPIDO**
+
+### Metodo 1: Script Automatico (Raccomandato)
+```bash
+# Clona e avvia tutto automaticamente
+git clone https://github.com/AngelKb81/code_challenge.git
+cd code_challenge
+./start-app.sh
+```
+
+### Metodo 2: Avvio Veloce
+```bash
+# Solo database e server
+./quick-start.sh
+```
+
+### Metodo 3: Comando Artisan
+```bash
+# Con development server
+php artisan app:start --dev
+```
+
+### Metodo 4: NPM Script
+```bash
+# Laravel + Vite simultaneamente
+npm run start
+```
+
+---
+
+## 🏗️ **ARCHITETTURA TECNICA**
+
+### Stack Tecnologico
+- **Backend**: Laravel 11 con Eloquent ORM
+- **Frontend**: Vue 3 (Composition API) 
+- **Bridge**: Inertia.js v2.1.3 per SPA senza API
+- **Styling**: Tailwind CSS v3.4
+- **Build**: Vite 6.0 con HMR
+- **Database**: MySQL con migrazioni e seeder
+
+### Struttura Database
+
+#### 🗄️ **Tabelle Principali**
+
+**Users** - Gestione utenti e autenticazione
+```sql
+- id, name, email, password
+- role (enum: 'admin', 'user')  
+- email_verified_at, timestamps
+```
+
+**Items** - Articoli del magazzino
+```sql
+- id, name, description, category
+- quantity, unit_price, location
+- status (enum: 'available', 'low_stock', 'out_of_stock')
+- min_quantity, timestamps
+```
+
+**Requests** - Richieste di articoli
+```sql
+- id, user_id, item_id
+- quantity_requested, status
+- notes, timestamps
+- Relazioni: belongsTo User, belongsTo Item
+```
+
+### 🔐 **Sistema Autorizzazioni**
+
+**Gate Personalizzati**:
+- `admin-only`: Accesso esclusivo amministratori
+- `user-operations`: Operazioni base utenti
+
+**Middleware Protetto**:
+- Tutte le route CRUD magazzino richiedono ruolo admin
+- Dashboard personalizzata per ruolo
+- Controlli a livello di controller e vista
+
+---
+
+## 📋 **FUNZIONALITÀ COMPLETE**
+
+### 👤 **Gestione Utenti**
+
+#### Autenticazione
+- ✅ Login/Logout sicuro con validazione
+- ✅ Gestione sessioni persistenti  
+- ✅ Middleware di protezione route
+- ✅ Redirect automatici per ruolo
+
+#### Ruoli e Permessi
+- 🔐 **Admin**: CRUD completo articoli, gestione magazzino
+- 👤 **User**: Visualizzazione dashboard, richieste future
+
+### 📦 **Gestione Magazzino (Admin)**
+
+#### Interface CRUD Completa
+- ✅ **Lista Articoli** (`/warehouse/manage`)
+  - Tabella responsive con paginazione
+  - Filtri per categoria e stato
+  - Ricerca in tempo reale
+  - Azioni rapide (modifica/elimina)
+
+- ✅ **Creazione Articoli** (`/warehouse/create`)
+  - Form validato con controlli frontend/backend
+  - Gestione dinamica categorie
+  - Calcolo automatico stato stock
+  - Feedback visivo operazioni
+
+- ✅ **Modifica Articoli** (`/warehouse/edit/{id}`)
+  - Form pre-popolato con dati esistenti
+  - Validazione incrementale
+  - Aggiornamento PATCH ottimizzato
+
+#### Business Logic
+- ✅ Calcolo automatico stato stock (available/low_stock/out_of_stock)
+- ✅ Validazione quantità minime
+- ✅ Controlli integrità dati
+- ✅ Gestione errori e notifiche
+
+### 🎨 **Interface Utente**
+
+#### Dashboard Personalizzata
+- ✅ Layout responsivo mobile-first
+- ✅ Statistiche magazzino in tempo reale
+- ✅ Navigazione condizionale per ruolo
+- ✅ Componenti Vue riutilizzabili
+
+#### Componenti Sviluppati
+- `Dashboard.vue` - Pannello principale
+- `ManageItems.vue` - Gestione completa articoli
+- `CreateItem.vue` - Form creazione
+- `EditItem.vue` - Form modifica
+- `AuthenticatedLayout.vue` - Layout base
+
+---
+
+## 🗂️ **STRUTTURA CODEBASE**
+
+### Controller
+```
+app/Http/Controllers/
+├── Auth/AuthenticatedSessionController.php    # Login/Logout
+├── DashboardController.php                    # Dashboard principale  
+├── ProfileController.php                      # Gestione profilo
+└── WarehouseController.php                    # CRUD Magazzino completo
+    ├── index()          # Dashboard magazzino
+    ├── manageItems()    # Lista articoli admin
+    ├── createItem()     # Form creazione
+    ├── storeItem()      # Salvataggio nuovo
+    ├── editItem()       # Form modifica
+    ├── updateItem()     # Aggiornamento
+    └── destroyItem()    # Eliminazione
+```
+
+### Models con Relazioni
+```
+app/Models/
+├── User.php           # hasMany requests
+├── Item.php           # hasMany requests  
+└── Request.php        # belongsTo user, belongsTo item
+```
+
+### Routes Organizzate
+```
+routes/web.php
+├── Auth routes        # Login/logout/register
+├── Dashboard          # GET /dashboard
+├── Profile routes     # Gestione profilo
+└── Warehouse routes   # Gruppo protetto middleware 'can:admin-only'
+    ├── GET /warehouse                    # Dashboard magazzino
+    ├── GET /warehouse/manage             # Lista articoli
+    ├── GET /warehouse/create             # Form creazione
+    ├── POST /warehouse                   # Store nuovo
+    ├── GET /warehouse/{item}/edit        # Form modifica
+    ├── PATCH /warehouse/{item}           # Update
+    └── DELETE /warehouse/{item}          # Delete
+```
+
+### Vue Components
+```
+resources/js/Pages/
+├── Auth/Login.vue                # Form login
+├── Dashboard.vue                 # Dashboard principale
+├── Profile/Edit.vue              # Modifica profilo
+└── Warehouse/
+    ├── Index.vue                 # Dashboard magazzino
+    ├── ManageItems.vue          # Gestione completa articoli
+    ├── CreateItem.vue           # Form creazione
+    └── EditItem.vue             # Form modifica
+```
+
+---
+
+## 📊 **DATI DI ESEMPIO**
+
+### Utenti di Test (password: `password`)
+```
+🔐 Admin: admin@example.com
+👤 User:  user@example.com  
++ 10 utenti aggiuntivi con dati realistici
+```
+
+### Articoli Magazzino (14 items)
+```
+📱 Elettronica: laptop, smartphone, tablet, cuffie
+🏠 Casa: scrivania, sedia, lampada, aspirapolvere  
+📚 Ufficio: notebook, penne, stampante, carta
+🎮 Gaming: console, controller
+```
+
+### Richieste di Esempio (10 requests)
+```
+- Richieste simulate da utenti diversi
+- Stati: pending, approved, rejected  
+- Quantità e note realistiche
+```
+
+---
+
+## ⚙️ **CONFIGURAZIONE SVILUPPO**
+
+### Requisiti Sistema
+- PHP 8.2+
+- Composer 2.0+
+- Node.js 18+
+- NPM 8+
+- MySQL 8.0+
+
+### Setup Manuale
+```bash
+# 1. Installa dipendenze
+composer install
+npm install
+
+# 2. Configura ambiente
+cp .env.example .env
+php artisan key:generate
+
+# 3. Configura database in .env
+DB_DATABASE=code_challenge
+DB_USERNAME=your_username  
+DB_PASSWORD=your_password
+
+# 4. Setup database
+php artisan migrate:fresh --seed
+
+# 5. Avvia development
+php artisan serve          # Laravel su :8000
+npm run dev                # Vite HMR su :5173
+```
+
+### Comandi Utili
+```bash
+# Cache management
+php artisan config:clear && php artisan route:clear && php artisan view:clear
+
+# Database
+php artisan migrate:fresh --seed    # Ricrea con dati
+php artisan db:seed                 # Solo dati
+
+# Assets
+npm run build                       # Build produzione
+npm run dev                         # Development con HMR
+```
+
+---
+
+## 🔧 **FEATURES TECNICHE AVANZATE**
+
+### Laravel
+- ✅ **Eloquent ORM** con relazioni complesse
+- ✅ **Gates & Policies** per autorizzazioni granulari
+- ✅ **Form Requests** con validazione custom
+- ✅ **Resource Controllers** RESTful
+- ✅ **Middleware** personalizzati
+- ✅ **Seeders** con dati realistici usando Faker
+- ✅ **Artisan Commands** personalizzati
+
+### Vue.js & Inertia
+- ✅ **Composition API** con script setup
+- ✅ **Inertia Form Helpers** per gestione stato
+- ✅ **Reactive Data** con ref/reactive
+- ✅ **Component Props** tipizzati
+- ✅ **Event Handling** ottimizzato
+- ✅ **Conditional Rendering** per ruoli
+
+### Frontend
+- ✅ **Tailwind CSS** con design system coerente
+- ✅ **Responsive Design** mobile-first
+- ✅ **Component Architecture** modulare
+- ✅ **Form Validation** real-time
+- ✅ **Loading States** e feedback utente
+- ✅ **Modal Confirmations** per azioni critiche
+
+---
+
+## 📁 **STRUTTURA PROGETTO**
+
+```
+code_challenge/
+├── 📂 app/
+│   ├── 📂 Console/Commands/
+│   │   └── StartApplication.php         # Comando avvio custom
+│   ├── 📂 Http/Controllers/
+│   │   ├── 📂 Auth/
+│   │   ├── DashboardController.php
+│   │   └── WarehouseController.php      # CRUD completo
+│   ├── 📂 Models/
+│   │   ├── User.php                     # Con ruoli
+│   │   ├── Item.php                     # Articoli magazzino
+│   │   └── Request.php                  # Richieste
+│   └── 📂 Providers/
+│       └── AppServiceProvider.php       # Gates autorizzazioni
+├── 📂 database/
+│   ├── 📂 migrations/                   # Schema completo
+│   ├── 📂 seeders/                      # Dati realistici
+│   └── 📂 factories/                    # Factory per testing
+├── 📂 resources/
+│   ├── 📂 js/
+│   │   ├── 📂 Components/               # Componenti riutilizzabili
+│   │   ├── 📂 Layouts/
+│   │   └── 📂 Pages/                    # Route components
+│   └── 📂 views/                        # Template Blade base
+├── 📂 routes/
+│   └── web.php                          # Route organizzate per feature
+├── 📄 start-app.sh                      # Script avvio completo
+├── 📄 quick-start.sh                    # Script avvio rapido
+└── 📄 README.md                         # Questa documentazione
+```
+
+---
+
+## 🎯 **OBIETTIVI RAGGIUNTI**
+
+### ✅ Requisiti Tecnici
+- [x] Laravel 11 con architettura MVC
+- [x] Vue 3 con Composition API
+- [x] Inertia.js per SPA experience
+- [x] Database relazionale con migrazioni
+- [x] Autenticazione e autorizzazioni
+- [x] Interface responsiva moderna
+
+### ✅ Business Logic
+- [x] Sistema ruoli Admin/User
+- [x] CRUD completo articoli magazzino
+- [x] Gestione stati e quantità
+- [x] Validazioni frontend/backend
+- [x] Dashboard personalizzate per ruolo
+
+### ✅ User Experience
+- [x] Interface intuitiva e moderna
+- [x] Feedback visivo operazioni
+- [x] Gestione errori elegante
+- [x] Performance ottimizzate
+- [x] Mobile responsive
+
+### ✅ Developer Experience  
+- [x] Codebase organizzato e documentato
+- [x] Scripts automatizzati per setup
+- [x] Dati di esempio realistici
+- [x] Debugging e logging
+- [x] Git workflow strutturato
+
+---
+
+## 🤝 **CONTRIBUTI**
+
+Sviluppato da **Angelo Corbelli** come code challenge.
+
+### Contatti
+- 📧 Email: angelocorbelli@example.com
+- 💼 LinkedIn: [Angelo Corbelli](https://linkedin.com/in/angelocorbelli)
+- 🐙 GitHub: [@AngelKb81](https://github.com/AngelKb81)
+
+---
+
+## 📄 **LICENZA**
+
+Questo progetto è rilasciato sotto licenza MIT. Vedere il file `LICENSE` per dettagli.
+
+---
+
+<p align="center">
+  <b>🎉 Progetto Code Challenge completato con successo!</b><br>
+  <i>Dimostra competenze full-stack moderne con Laravel 11, Vue 3 e Inertia.js</i>
+</p>
 
 Laravel is accessible, powerful, and provides tools required for large, robust applications.
 

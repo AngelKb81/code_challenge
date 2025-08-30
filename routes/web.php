@@ -33,7 +33,7 @@ Route::middleware('auth')->group(function () {
             Route::patch('/requests/{request}/approve', [WarehouseController::class, 'approveRequest'])->name('requests.approve');
             Route::patch('/requests/{request}/reject', [WarehouseController::class, 'rejectRequest'])->name('requests.reject');
             Route::patch('/requests/{request}/return', [WarehouseController::class, 'returnRequest'])->name('requests.return');
-            
+
             // Item management (CRUD)
             Route::get('/items/manage', [WarehouseController::class, 'manageItems'])->name('items.manage');
             Route::get('/items/create', [WarehouseController::class, 'createItem'])->name('items.create');
