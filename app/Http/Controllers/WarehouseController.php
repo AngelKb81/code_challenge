@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Item;
 use App\Models\Request;
 use App\Models\User;
+use App\Services\RequestApprovalService;
 use Illuminate\Http\Request as HttpRequest;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -29,9 +30,11 @@ class WarehouseController extends Controller
             ->take(5)
             ->get();
 
-        $lowStockItems = Item::where('quantity', '<=', 5)
-            ->where('status', 'available')
-            ->get();
+        $lowStockItems = Item::where('status', 'available')
+            ->get()
+            ->filter(function ($item) {
+                return $item->getAvailableQuantity() <= 5 && $item->getAvailableQuantity() > 0;
+            });
 
         return Inertia::render('Warehouse/Dashboard', [
             'stats' => $stats,
@@ -87,7 +90,8 @@ class WarehouseController extends Controller
         $query = Request::with(['user', 'item', 'approver']);
 
         // Filtri per gli admin
-        if (Auth::user()->isAdmin()) {
+        $user = Auth::user();
+        if ($user && $user->role === 'admin') {
             if ($request->filled('status')) {
                 $query->where('status', $request->get('status'));
             }
@@ -108,7 +112,7 @@ class WarehouseController extends Controller
 
         $statuses = ['pending', 'approved', 'rejected', 'in_use', 'returned', 'overdue'];
         $priorities = ['low', 'medium', 'high', 'urgent'];
-        $users = Auth::user()->isAdmin() ? \App\Models\User::where('role', 'user')->get() : collect();
+        $users = ($user && $user->role === 'admin') ? \App\Models\User::where('role', 'user')->get() : collect();
 
         return Inertia::render('Warehouse/Requests', [
             'requests' => $requests,
@@ -126,8 +130,11 @@ class WarehouseController extends Controller
     {
         $availableItems = Item::where('status', 'available')
             ->where('quantity', '>', 0)
-            ->orderBy('name')
-            ->get();
+            ->get()
+            ->filter(function ($item) {
+                return $item->getAvailableQuantity() > 0;
+            })
+            ->values(); // Reset keys after filter
 
         return Inertia::render('Warehouse/CreateRequest', [
             'availableItems' => $availableItems,
@@ -146,7 +153,18 @@ class WarehouseController extends Controller
             'reason' => 'required|string|max:500',
             'notes' => 'nullable|string|max:1000',
             'priority' => 'required|in:low,medium,high,urgent',
+            'quantity_requested' => 'required|integer|min:1',
         ]);
+
+        // Verifica disponibilità
+        $item = Item::findOrFail($validated['item_id']);
+        $availableQuantity = $item->getAvailableQuantity();
+
+        if ($validated['quantity_requested'] > $availableQuantity) {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['quantity_requested' => "Quantità richiesta non disponibile. Disponibili: {$availableQuantity}"]);
+        }
 
         $validated['user_id'] = Auth::id();
 
@@ -159,18 +177,20 @@ class WarehouseController extends Controller
     /**
      * Approve a request (Admin only).
      */
-    public function approveRequest(\App\Models\Request $request)
+    public function approveRequest(\App\Models\Request $request, RequestApprovalService $approvalService)
     {
-        abort_unless(Auth::user()->isAdmin(), 403);
+        $user = Auth::user();
+        abort_unless($user && $user->role === 'admin', 403);
 
-        $request->update([
-            'status' => 'approved',
-            'approved_by' => Auth::id(),
-            'approved_at' => now(),
-        ]);
+        // Usa il service per gestire l'approvazione con concorrenza
+        $result = $approvalService->approveRequest($request, Auth::id());
 
-        return redirect()->back()
-            ->with('success', 'Richiesta approvata con successo! L\'utente è stato notificato.');
+        if ($result['success']) {
+            $flashType = count($result['rejected_requests']) > 0 ? 'warning' : 'success';
+            return redirect()->back()->with($flashType, $result['message']);
+        } else {
+            return redirect()->back()->with('error', $result['message']);
+        }
     }
 
     /**
@@ -178,7 +198,8 @@ class WarehouseController extends Controller
      */
     public function rejectRequest(HttpRequest $httpRequest, \App\Models\Request $request)
     {
-        abort_unless(Auth::user()->isAdmin(), 403);
+        $user = Auth::user();
+        abort_unless($user && $user->role === 'admin', 403);
 
         $validated = $httpRequest->validate([
             'rejection_reason' => 'required|string|max:500',
@@ -200,12 +221,24 @@ class WarehouseController extends Controller
      */
     public function returnRequest(\App\Models\Request $request)
     {
-        abort_unless(Auth::user()->isAdmin(), 403);
+        $user = Auth::user();
+        abort_unless($user && $user->role === 'admin', 403);
 
+        // Verifica che la richiesta sia approvata
+        if ($request->status !== 'approved') {
+            return redirect()->back()
+                ->with('error', 'Solo le richieste approvate possono essere marchiate come restituite.');
+        }
+
+        // Aggiorna semplicemente la richiesta a "returned"
+        // La quantità dell'item non cambia più fisicamente
         $request->update([
             'status' => 'returned',
             'returned_at' => now(),
         ]);
+
+        // Aggiorna lo status dell'item (ora disponibile di nuovo)
+        $request->item->calculateAndUpdateStatus();
 
         return redirect()->back()
             ->with('success', 'Articolo contrassegnato come restituito con successo.');
@@ -220,7 +253,8 @@ class WarehouseController extends Controller
      */
     public function manageItems(HttpRequest $request): Response
     {
-        abort_unless(Auth::user()->isAdmin(), 403);
+        $user = Auth::user();
+        abort_unless($user && $user->role === 'admin', 403);
 
         $query = Item::query();
 
@@ -261,7 +295,8 @@ class WarehouseController extends Controller
      */
     public function createItem(): Response
     {
-        abort_unless(Auth::user()->isAdmin(), 403);
+        $user = Auth::user();
+        abort_unless($user && $user->role === 'admin', 403);
 
         $categories = Item::distinct()->pluck('category')->sort()->values();
         $statuses = ['available', 'not_available', 'maintenance', 'reserved'];
@@ -277,7 +312,8 @@ class WarehouseController extends Controller
      */
     public function storeItem(HttpRequest $request)
     {
-        abort_unless(Auth::user()->isAdmin(), 403);
+        $user = Auth::user();
+        abort_unless($user && $user->role === 'admin', 403);
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -305,7 +341,8 @@ class WarehouseController extends Controller
      */
     public function editItem(Item $item): Response
     {
-        abort_unless(Auth::user()->isAdmin(), 403);
+        $user = Auth::user();
+        abort_unless($user && $user->role === 'admin', 403);
 
         $categories = Item::distinct()->pluck('category')->sort()->values();
         $statuses = ['available', 'not_available', 'maintenance', 'reserved'];
@@ -322,7 +359,8 @@ class WarehouseController extends Controller
      */
     public function updateItem(HttpRequest $request, Item $item)
     {
-        abort_unless(Auth::user()->isAdmin(), 403);
+        $user = Auth::user();
+        abort_unless($user && $user->role === 'admin', 403);
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -350,7 +388,8 @@ class WarehouseController extends Controller
      */
     public function destroyItem(Item $item)
     {
-        abort_unless(Auth::user()->isAdmin(), 403);
+        $user = Auth::user();
+        abort_unless($user && $user->role === 'admin', 403);
 
         // Verifica se ci sono richieste attive per questo item
         $activeRequests = Request::where('item_id', $item->id)

@@ -103,7 +103,7 @@
                                     {{ getStatusText(item.status) }}
                                 </span>
                                 <span class="text-xs text-gray-500">
-                                    Qty: {{ item.quantity }}
+                                    <span class="font-medium">Disponibili:</span> {{ item.available_quantity || 0 }} / {{ item.quantity }}
                                 </span>
                             </div>
 
@@ -132,7 +132,7 @@
                             <!-- Action Button -->
                             <div class="mt-4">
                                 <Link 
-                                    v-if="item.status === 'available' && item.quantity > 0"
+                                    v-if="item.status === 'available' && (item.available_quantity || 0) > 0"
                                     :href="route('warehouse.requests.create', { item_id: item.id })"
                                     class="w-full inline-flex justify-center items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                                 >
@@ -143,7 +143,7 @@
                                     disabled
                                     class="w-full inline-flex justify-center items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-400 bg-gray-100 cursor-not-allowed"
                                 >
-                                    Non disponibile
+                                    {{ (item.available_quantity || 0) === 0 ? 'Esaurito' : 'Non disponibile' }}
                                 </button>
                             </div>
                         </div>

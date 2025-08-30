@@ -171,7 +171,7 @@
                                         <p class="text-xs text-gray-500">{{ item.brand }} - {{ item.category }}</p>
                                     </div>
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                        {{ item.quantity }} rimasti
+                                        {{ item.available_quantity || 0 }} disponibili di {{ item.quantity }}
                                     </span>
                                 </div>
                             </div>

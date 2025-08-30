@@ -117,9 +117,15 @@
                                         {{ item.brand || 'N/A' }}
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <span :class="item.quantity <= 5 ? 'text-red-600 font-semibold' : 'text-gray-900'" class="text-sm">
-                                            {{ item.quantity }}
-                                        </span>
+                                        <div class="text-sm text-gray-900">
+                                            <span :class="(item.available_quantity || 0) <= 5 ? 'text-red-600 font-semibold' : 'text-gray-900'">
+                                                {{ item.available_quantity || 0 }}
+                                            </span>
+                                            <span class="text-gray-500 text-xs ml-1">/ {{ item.quantity }}</span>
+                                        </div>
+                                        <div class="text-xs text-gray-500">
+                                            {{ (item.available_quantity || 0) <= 5 && (item.available_quantity || 0) > 0 ? 'Scorte basse' : (item.available_quantity || 0) === 0 ? 'Esaurito' : 'Disponibile' }}
+                                        </div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <span :class="getStatusClass(item.status)" class="inline-flex px-2 py-1 text-xs font-semibold rounded-full">

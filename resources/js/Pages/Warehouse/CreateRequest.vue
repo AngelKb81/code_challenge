@@ -40,8 +40,14 @@
                                         required
                                     >
                                         <option value="">Seleziona un articolo...</option>
-                                        <option v-for="item in availableItems" :key="item.id" :value="item.id">
-                                            {{ item.name }} - {{ item.category }} ({{ item.quantity }} disponibili)
+                                        <option 
+                                            v-for="item in availableItems" 
+                                            :key="item.id" 
+                                            :value="item.id"
+                                            :disabled="(item.available_quantity || 0) === 0"
+                                        >
+                                            {{ item.name }} - {{ item.category }} 
+                                            ({{ item.available_quantity || 0 }} disponibili di {{ item.quantity }})
                                         </option>
                                     </select>
                                     <div v-if="form.errors.item_id" class="mt-1 text-sm text-red-600">
@@ -63,7 +69,7 @@
                                         </div>
                                         <div>
                                             <span class="font-medium text-blue-700">Disponibili:</span>
-                                            <p class="text-blue-900">{{ selectedItem.quantity }}</p>
+                                            <p class="text-blue-900">{{ selectedItem.available_quantity || 0 }} di {{ selectedItem.quantity }}</p>
                                         </div>
                                         <div v-if="selectedItem.description" class="md:col-span-3">
                                             <span class="font-medium text-blue-700">Descrizione:</span>
@@ -143,9 +149,13 @@
                                         type="number"
                                         v-model="form.quantity_requested"
                                         min="1"
-                                        :max="selectedItem?.quantity || 1"
-                                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                        :max="selectedItem?.available_quantity || 0"
+                                        :disabled="!selectedItem || (selectedItem?.available_quantity || 0) === 0"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
                                     >
+                                    <div v-if="selectedItem && (selectedItem?.available_quantity || 0) === 0" class="mt-1 text-sm text-red-600">
+                                        Questo articolo non è attualmente disponibile
+                                    </div>
                                     <div v-if="form.errors.quantity_requested" class="mt-1 text-sm text-red-600">
                                         {{ form.errors.quantity_requested }}
                                     </div>
@@ -294,6 +304,22 @@ const onItemSelected = () => {
 }
 
 const submit = () => {
+    // Validazione frontend aggiuntiva
+    if (!selectedItem.value) {
+        alert('Seleziona un articolo prima di procedere');
+        return;
+    }
+    
+    if ((selectedItem.value.available_quantity || 0) === 0) {
+        alert('L\'articolo selezionato non è attualmente disponibile');
+        return;
+    }
+    
+    if (form.quantity_requested > (selectedItem.value.available_quantity || 0)) {
+        alert(`Quantità non disponibile. Massimo ${selectedItem.value.available_quantity || 0} unità`);
+        return;
+    }
+    
     form.post(route('warehouse.requests.store'), {
         onSuccess: () => {
             // Redirect will be handled by Laravel

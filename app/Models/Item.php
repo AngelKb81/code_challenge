@@ -44,6 +44,13 @@ class Item extends Model
     ];
 
     /**
+     * The accessors to append to the model's array form.
+     *
+     * @var array
+     */
+    protected $appends = ['available_quantity'];
+
+    /**
      * Get all requests for this item.
      */
     public function requests(): HasMany
@@ -72,16 +79,7 @@ class Item extends Model
      */
     public function isAvailable(): bool
     {
-        return $this->status === 'available' && $this->quantity > 0;
-    }
-
-    /**
-     * Get available quantity (considering active requests).
-     */
-    public function getAvailableQuantityAttribute(): int
-    {
-        $requestedQuantity = $this->activeRequests()->sum('quantity_requested');
-        return max(0, $this->quantity - $requestedQuantity);
+        return $this->getAvailableQuantity() > 0;
     }
 
     /**
@@ -105,7 +103,20 @@ class Item extends Model
      */
     public function scopeAvailable($query)
     {
-        return $query->where('status', 'available')->where('quantity', '>', 0);
+        return $query->where('status', 'available');
+    }
+
+    /**
+     * Scope to filter items with actual availability > 0.
+     */
+    public function scopeActuallyAvailable($query)
+    {
+        return $query->where('status', 'available')
+            ->where('quantity', '>', 0)
+            ->get()
+            ->filter(function ($item) {
+                return $item->getAvailableQuantity() > 0;
+            });
     }
 
     /**
@@ -119,5 +130,48 @@ class Item extends Model
                 ->orWhere('description', 'like', "%{$search}%")
                 ->orWhere('serial_number', 'like', "%{$search}%");
         });
+    }
+
+    /**
+     * Calculate and update the status based on quantity.
+     */
+    public function calculateAndUpdateStatus(): void
+    {
+        $status = $this->calculateStatus();
+        if ($this->status !== $status) {
+            $this->update(['status' => $status]);
+        }
+    }
+
+    /**
+     * Calculate the status based on current condition.
+     * Note: This method is kept for consistency but with simplified logic.
+     * Availability is now handled by the available_quantity attribute.
+     */
+    public function calculateStatus(): string
+    {
+        // Status now only reflects operational condition, not stock availability
+        return 'available';
+    }
+
+    /**
+     * Get available quantity (considering approved requests).
+     * This is the core method for availability calculation.
+     */
+    public function getAvailableQuantityAttribute(): int
+    {
+        $approvedQuantity = $this->requests()
+            ->where('status', 'approved')
+            ->sum('quantity_requested');
+
+        return max(0, $this->quantity - $approvedQuantity);
+    }
+
+    /**
+     * Helper method to get available quantity.
+     */
+    public function getAvailableQuantity(): int
+    {
+        return $this->getAvailableQuantityAttribute();
     }
 }

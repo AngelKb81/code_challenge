@@ -81,8 +81,9 @@ npm run start
 ```sql
 - id, name, description, category
 - quantity, unit_price, location
-- status (enum: 'available', 'low_stock', 'out_of_stock')
+- status (enum: 'available', 'not_available', 'maintenance', 'reserved')
 - min_quantity, timestamps
+- available_quantity (calcolato: quantity - approved_requests)
 ```
 
 **Requests** - Richieste di articoli
@@ -141,9 +142,9 @@ npm run start
   - Aggiornamento PATCH ottimizzato
 
 #### Business Logic
-- ✅ Calcolo automatico stato stock (available/low_stock/out_of_stock)
-- ✅ Validazione quantità minime
-- ✅ Controlli integrità dati
+- ✅ Calcolo automatico quantità disponibile (quantity - approved_requests)
+- ✅ Gestione stati operativi (available/not_available/maintenance/reserved)
+- ✅ Validazione quantità e controlli integrità
 - ✅ Gestione errori e notifiche
 
 ### 🎨 **Interface Utente**
