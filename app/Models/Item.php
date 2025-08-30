@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -154,19 +155,23 @@ class Item extends Model
         return 'available';
     }
 
-    /**
-     * Get available quantity (considering approved requests).
-     * This is the core method for availability calculation.
+        /**
+     * Get the quantity available for immediate use (today).
+     * Calculates based on requests that are currently active (overlapping with today).
      * Excludes purchase_request type as they add items to inventory rather than remove them.
      */
     public function getAvailableQuantityAttribute(): int
     {
-        $approvedQuantity = $this->requests()
+        $today = Carbon::today();
+        
+        $currentlyUsedQuantity = $this->requests()
             ->where('status', 'approved')
-            ->where('request_type', 'existing_item') // Solo richieste per item esistenti
+            ->where('request_type', 'existing_item')
+            ->where('start_date', '<=', $today)
+            ->where('end_date', '>=', $today)
             ->sum('quantity_requested');
 
-        return max(0, $this->quantity - $approvedQuantity);
+        return max(0, $this->quantity - $currentlyUsedQuantity);
     }
 
     /**

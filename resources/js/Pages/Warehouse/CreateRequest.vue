@@ -101,10 +101,18 @@
                                             v-for="item in availableItems" 
                                             :key="item.id" 
                                             :value="item.id"
-                                            :disabled="(item.available_quantity || 0) === 0"
                                         >
-                                            {{ item.name }} - {{ item.category }} 
-                                            ({{ item.available_quantity || 0 }} disponibili di {{ item.quantity }})
+                                            {{ item.name }} - {{ item.category }}
+                                            <!-- OPZIONE A per Item Non Disponibili: Badge + Status nel select -->
+                                            <span v-if="item.status !== 'available'">
+                                                (Non disponibile)
+                                            </span>
+                                            <span v-else-if="item.available_quantity > 0">
+                                                (Disponibile subito - {{ item.available_quantity }} unità)
+                                            </span>
+                                            <span v-else>
+                                                (Esaurito)
+                                            </span>
                                         </option>
                                     </select>
                                     <div v-if="form.errors.item_id" class="mt-1 text-sm text-red-600">
@@ -135,6 +143,47 @@
                                         <div v-if="selectedItem.location" class="md:col-span-3">
                                             <span class="font-medium text-blue-700">Posizione:</span>
                                             <p class="text-blue-900">{{ selectedItem.location }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Disponibilità Item (Opzione A semplificata) -->
+                                <div v-if="selectedItem" class="md:col-span-2">
+                                    <!-- Badge di disponibilità semplificato -->
+                                    <div class="mb-4">
+                                        <!-- Item Non Disponibile per Status -->
+                                        <div v-if="selectedItem.status !== 'available'" class="bg-red-50 border border-red-200 p-4 rounded-lg">
+                                            <div class="flex items-center">
+                                                <svg class="w-5 h-5 mr-2 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                                                </svg>
+                                                <span class="font-medium text-red-800">Non Disponibile</span>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Item Disponibile Subito -->
+                                        <div v-else-if="selectedItem.available_quantity > 0" class="bg-green-50 border border-green-200 p-4 rounded-lg">
+                                            <div class="flex items-center">
+                                                <svg class="w-5 h-5 mr-2 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                                </svg>
+                                                <span class="font-medium text-green-800">Disponibile Subito</span>
+                                                <span class="ml-2 text-green-700">({{ selectedItem.available_quantity }} unità)</span>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Item Esaurito ma con possibili date future -->
+                                        <div v-else class="bg-red-50 border border-red-200 p-4 rounded-lg">
+                                            <div class="flex items-center mb-2">
+                                                <svg class="w-5 h-5 mr-2 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                                                </svg>
+                                                <span class="font-medium text-red-800">Esaurito</span>
+                                            </div>
+                                            <!-- Prima data disponibile se esiste -->
+                                            <div v-if="selectedItem.availability && selectedItem.availability.next_available_date" class="text-sm text-red-700">
+                                                Prima data disponibile: <strong>{{ formatDate(selectedItem.availability.next_available_date) }}</strong>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -276,23 +325,44 @@
                                     </div>
                                 </div>
 
-                                <!-- Date (solo per existing items) -->
+                                <!-- Date (solo per existing items con suggerimento automatico) -->
                                 <div v-if="form.request_type === 'existing_item'" class="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <!-- Data Inizio -->
+                                    <!-- Data Inizio con suggerimento automatico -->
                                     <div>
                                         <label for="start_date" class="block text-sm font-medium text-gray-700 mb-2">
                                             Data Inizio *
                                         </label>
+                                        <!-- Suggerimento automatico se item non immediatamente disponibile -->
+                                        <div v-if="selectedItem && selectedItem.available_quantity === 0 && selectedItem.availability?.next_available_date" class="mb-2 p-2 bg-blue-50 border border-blue-200 rounded text-sm">
+                                            <div class="flex items-center text-blue-700">
+                                                <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                                                </svg>
+                                                Suggerimento: prima data disponibile {{ formatDate(selectedItem.availability.next_available_date) }}
+                                            </div>
+                                            <button 
+                                                type="button"
+                                                @click="useSuggestedDate"
+                                                class="mt-1 text-xs text-blue-600 hover:text-blue-800 underline"
+                                            >
+                                                Usa questa data
+                                            </button>
+                                        </div>
                                         <input
                                             id="start_date"
                                             type="date"
                                             v-model="form.start_date"
-                                            :min="today"
+                                            :min="getMinStartDate()"
+                                            @change="validateDates"
                                             class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                                             required
                                         >
                                         <div v-if="form.errors.start_date" class="mt-1 text-sm text-red-600">
                                             {{ form.errors.start_date }}
+                                        </div>
+                                        <!-- Validazione in tempo reale -->
+                                        <div v-if="dateValidationMessage" class="mt-1 text-sm" :class="dateValidationMessage.type === 'error' ? 'text-red-600' : 'text-orange-600'">
+                                            {{ dateValidationMessage.message }}
                                         </div>
                                     </div>
 
@@ -305,12 +375,71 @@
                                             id="end_date"
                                             type="date"
                                             v-model="form.end_date"
-                                            :min="form.start_date || today"
+                                            :min="form.start_date || getMinStartDate()"
+                                            @change="validateDates"
                                             class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                                             required
                                         >
                                         <div v-if="form.errors.end_date" class="mt-1 text-sm text-red-600">
                                             {{ form.errors.end_date }}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Validazione Disponibilità in Tempo Reale -->
+                                <div v-if="form.request_type === 'existing_item' && selectedItem && form.start_date && form.end_date" class="md:col-span-2">
+                                    <div v-if="availabilityValidation.loading" class="bg-blue-50 border border-blue-200 p-4 rounded-lg">
+                                        <div class="flex items-center">
+                                            <svg class="animate-spin h-5 w-5 mr-2 text-blue-600" fill="none" viewBox="0 0 24 24">
+                                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            </svg>
+                                            <span class="text-blue-700">Verifica disponibilità...</span>
+                                        </div>
+                                    </div>
+
+                                    <div v-else-if="availabilityValidation.result" class="rounded-lg p-4" :class="[
+                                        availabilityValidation.result.available 
+                                            ? 'bg-green-50 border border-green-200' 
+                                            : 'bg-red-50 border border-red-200'
+                                    ]">
+                                        <div class="flex items-start">
+                                            <svg class="h-5 w-5 mr-2 mt-0.5" :class="[
+                                                availabilityValidation.result.available ? 'text-green-600' : 'text-red-600'
+                                            ]" fill="currentColor" viewBox="0 0 20 20">
+                                                <path v-if="availabilityValidation.result.available" fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                                <path v-else fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                                            </svg>
+                                            <div class="flex-1">
+                                                <p class="font-medium" :class="[
+                                                    availabilityValidation.result.available ? 'text-green-800' : 'text-red-800'
+                                                ]">
+                                                    {{ availabilityValidation.result.message }}
+                                                </p>
+                                                
+                                                <!-- Richieste conflittuali -->
+                                                <div v-if="!availabilityValidation.result.available && availabilityValidation.result.conflicting_requests && availabilityValidation.result.conflicting_requests.length > 0" class="mt-3">
+                                                    <p class="text-red-700 text-sm font-medium mb-2">Richieste esistenti in conflitto:</p>
+                                                    <div class="space-y-2 mb-4">
+                                                        <div 
+                                                            v-for="(conflict, index) in availabilityValidation.result.conflicting_requests" 
+                                                            :key="index"
+                                                            class="bg-red-50 border border-red-200 rounded p-3 text-sm"
+                                                        >
+                                                            <div class="flex justify-between items-start">
+                                                                <div>
+                                                                    <p class="font-medium text-red-800">{{ conflict.user_name }}</p>
+                                                                    <p class="text-red-700">{{ conflict.start_date }} → {{ conflict.end_date }}</p>
+                                                                    <p class="text-red-600 text-xs">{{ conflict.quantity }} unità - {{ conflict.reason }}</p>
+                                                                </div>
+                                                                <span class="text-xs text-red-500 bg-red-100 px-2 py-1 rounded">
+                                                                    ID: {{ conflict.id }}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -336,7 +465,7 @@
                                     </div>
                                 </div>
 
-                                <!-- Quantità Richiesta - Existing Item -->
+                                <!-- Quantità Richiesta - Existing Item (Opzione A per gestione esauriti) -->
                                 <div v-if="form.request_type === 'existing_item'">
                                     <label for="quantity_requested" class="block text-sm font-medium text-gray-700 mb-2">
                                         Quantità Richiesta
@@ -346,12 +475,21 @@
                                         type="number"
                                         v-model="form.quantity_requested"
                                         min="1"
-                                        :max="selectedItem?.available_quantity || 0"
-                                        :disabled="!selectedItem || (selectedItem?.available_quantity || 0) === 0"
+                                        :max="getMaxQuantityForCurrentSelection()"
+                                        :disabled="!selectedItem || selectedItem.status !== 'available'"
                                         class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
                                     >
-                                    <div v-if="selectedItem && (selectedItem?.available_quantity || 0) === 0" class="mt-1 text-sm text-red-600">
-                                        Questo articolo non è attualmente disponibile
+                                    <!-- Messaggi informativi -->
+                                    <div v-if="selectedItem" class="mt-1 text-sm">
+                                        <div v-if="selectedItem.status !== 'available'" class="text-red-600">
+                                            Questo articolo non è disponibile
+                                        </div>
+                                        <div v-else-if="selectedItem.available_quantity === 0" class="text-red-600">
+                                            Articolo esaurito - seleziona date future per la prenotazione
+                                        </div>
+                                        <div v-else class="text-green-600">
+                                            Fino a {{ selectedItem.available_quantity }} unità disponibili subito
+                                        </div>
                                     </div>
                                     <div v-if="form.errors.quantity_requested" class="mt-1 text-sm text-red-600">
                                         {{ form.errors.quantity_requested }}
@@ -453,10 +591,16 @@
                                 </Link>
                                 <button
                                     type="submit"
-                                    :disabled="form.processing"
-                                    class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    :disabled="form.processing || isSubmitDisabled()"
+                                    :class="[
+                                        'px-6 py-2 rounded-md transition duration-200',
+                                        isSubmitDisabled() 
+                                            ? 'bg-gray-400 text-gray-700 cursor-not-allowed' 
+                                            : 'bg-blue-600 text-white hover:bg-blue-700'
+                                    ]"
                                 >
                                     <span v-if="form.processing">Invio in corso...</span>
+                                    <span v-else-if="isItemUnavailable()">Esaurito</span>
                                     <span v-else>Invia Richiesta</span>
                                 </button>
                             </div>
@@ -494,7 +638,7 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue'
-import { useForm } from '@inertiajs/vue3'
+import { useForm, usePage } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import { Link } from '@inertiajs/vue3'
 
@@ -526,6 +670,11 @@ const form = useForm({
 
 // State
 const selectedItem = ref(null)
+const dateValidationMessage = ref(null)
+const availabilityValidation = ref({
+    loading: false,
+    result: null
+})
 
 // Computed
 const today = computed(() => {
@@ -545,7 +694,206 @@ const onItemSelected = () => {
     selectedItem.value = props.availableItems.find(item => item.id == form.item_id) || null
     if (selectedItem.value) {
         form.quantity_requested = 1
+        // Reset date validation quando cambia item
+        dateValidationMessage.value = null
+        
+        // Auto-suggerimento data se item non immediatamente disponibile
+        if (selectedItem.value.available_quantity === 0 && selectedItem.value.availability?.next_available_date) {
+            // Non auto-compila, ma prepara il suggerimento (gestito nel template)
+        }
     }
+}
+
+// Nuovi metodi per le funzionalità implementate
+const getMinStartDate = () => {
+    if (selectedItem.value && selectedItem.value.available_quantity === 0 && selectedItem.value.availability?.next_available_date) {
+        // Se item non disponibile subito, suggerisci la prima data disponibile
+        return selectedItem.value.availability.next_available_date
+    }
+    return today.value
+}
+
+const getMaxQuantityForCurrentSelection = () => {
+    if (!selectedItem.value || selectedItem.value.status !== 'available') {
+        return 0
+    }
+    
+    // Se disponibile subito, usa available_quantity
+    if (selectedItem.value.available_quantity > 0) {
+        return selectedItem.value.available_quantity
+    }
+    
+    // Se esaurito ma ha date future disponibili, permetti la prenotazione
+    return selectedItem.value.quantity || 1
+}
+
+const useSuggestedDate = () => {
+    if (selectedItem.value?.availability?.next_available_date) {
+        form.start_date = selectedItem.value.availability.next_available_date
+        validateDates()
+    }
+}
+
+const validateDates = async () => {
+    dateValidationMessage.value = null
+    availabilityValidation.value.result = null
+    
+    if (!selectedItem.value || !selectedItem.value.id || !form.start_date || !form.end_date || !form.quantity_requested) {
+        return
+    }
+    
+    // Mostra indicatore di caricamento
+    availabilityValidation.value.loading = true
+    
+    try {
+        // Costruisci l'URL in modo sicuro
+        let apiUrl;
+        try {
+            if (typeof route === 'function') {
+                const routeName = 'warehouse.requests.validate-availability';
+                apiUrl = route(routeName);
+            } else {
+                throw new Error('Route function not available');
+            }
+        } catch (routeError) {
+            // Fallback: costruisci l'URL manualmente
+            console.warn('Route function error, using fallback URL:', routeError);
+            apiUrl = '/warehouse/requests/validate-availability';
+        }
+        
+        const response = await fetch(apiUrl, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': usePage().props.csrf_token || document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                item_id: selectedItem.value.id,
+                start_date: form.start_date,
+                end_date: form.end_date,
+                quantity_requested: form.quantity_requested
+            })
+        })
+        
+        if (response.ok) {
+            const result = await response.json()
+            availabilityValidation.value.result = result
+            
+            // Aggiorna anche il messaggio semplice per compatibilità
+            if (result.available) {
+                dateValidationMessage.value = {
+                    type: 'success',
+                    message: 'Periodo disponibile'
+                }
+            } else {
+                dateValidationMessage.value = {
+                    type: 'error',
+                    message: result.message
+                }
+            }
+        } else {
+            // Gestione più specifica degli errori HTTP
+            let errorMessage = 'Errore durante la verifica della disponibilità'
+            
+            if (response.status === 401) {
+                errorMessage = 'Accesso non autorizzato. Ricarica la pagina e riprova.'
+            } else if (response.status === 403) {
+                errorMessage = 'Non hai i permessi per questa operazione.'
+            } else if (response.status === 404) {
+                errorMessage = 'Endpoint di validazione non trovato.'
+            } else if (response.status === 422) {
+                const errorData = await response.json().catch(() => ({}))
+                errorMessage = errorData.message || 'Dati non validi per la validazione.'
+            } else if (response.status >= 500) {
+                errorMessage = 'Errore del server. Riprova più tardi.'
+            }
+            
+            console.error('HTTP Error:', response.status, response.statusText)
+            dateValidationMessage.value = {
+                type: 'error',
+                message: errorMessage
+            }
+            availabilityValidation.value.result = null
+        }
+    } catch (error) {
+        console.error('Errore validazione disponibilità:', error)
+        
+        // Gestione più specifica degli errori di rete/parsing
+        let errorMessage = 'Errore durante la verifica della disponibilità'
+        
+        if (error.name === 'TypeError' && error.message.includes('fetch')) {
+            errorMessage = 'Errore di connessione. Verifica la connessione di rete.'
+        } else if (error.name === 'SyntaxError' && error.message.includes('JSON')) {
+            errorMessage = 'Errore nel formato dei dati ricevuti dal server.'
+        } else if (error.message.includes('Route function not available')) {
+            errorMessage = 'Errore di routing. Ricarica la pagina e riprova.'
+        }
+        
+        dateValidationMessage.value = {
+            type: 'error',
+            message: errorMessage
+        }
+        availabilityValidation.value.result = null
+    } finally {
+        availabilityValidation.value.loading = false
+    }
+}
+
+// Metodi per gestire la disabilitazione del pulsante (Opzione A)
+const isItemUnavailable = () => {
+    if (form.request_type !== 'existing_item' || !selectedItem.value) {
+        return false
+    }
+    
+    return selectedItem.value.status !== 'available' || 
+           (selectedItem.value.available_quantity === 0 && !selectedItem.value.availability?.next_available_date)
+}
+
+const isSubmitDisabled = () => {
+    if (form.processing) {
+        return true
+    }
+    
+    if (form.request_type === 'existing_item') {
+        // Disabilita se item non selezionato
+        if (!selectedItem.value) {
+            return true
+        }
+        
+        // Disabilita se item non disponibile (Opzione A)
+        if (selectedItem.value.status !== 'available') {
+            return true
+        }
+        
+        // Disabilita se item esaurito e nessuna data futura disponibile
+        if (selectedItem.value.available_quantity === 0 && !selectedItem.value.availability?.next_available_date) {
+            return true
+        }
+        
+        // Disabilita se ci sono errori di validazione delle date
+        if (dateValidationMessage.value?.type === 'error') {
+            return true
+        }
+        
+        // Disabilita se la validazione della disponibilità è in corso
+        if (availabilityValidation.value.loading) {
+            return true
+        }
+        
+        // Disabilita se la validazione ha determinato che il periodo non è disponibile
+        if (availabilityValidation.value.result && !availabilityValidation.value.result.available) {
+            return true
+        }
+        
+        // Disabilita se date non inserite per item con available_quantity = 0
+        if (selectedItem.value.available_quantity === 0 && (!form.start_date || !form.end_date)) {
+            return true
+        }
+    }
+    
+    return false
 }
 
 const submit = () => {
@@ -557,14 +905,29 @@ const submit = () => {
             return;
         }
         
-        if ((selectedItem.value.available_quantity || 0) === 0) {
-            alert('L\'articolo selezionato non è attualmente disponibile');
+        // OPZIONE A: Permetti prenotazioni per item esauriti se hanno date future disponibili
+        if (selectedItem.value.status !== 'available') {
+            alert('L\'articolo selezionato non è disponibile');
             return;
         }
         
-        if (form.quantity_requested > (selectedItem.value.available_quantity || 0)) {
-            alert(`Quantità non disponibile. Massimo ${selectedItem.value.available_quantity || 0} unità`);
-            return;
+        // Se item disponibile subito, controlla quantità
+        if (selectedItem.value.available_quantity > 0) {
+            if (form.quantity_requested > selectedItem.value.available_quantity) {
+                alert(`Quantità non disponibile subito. Massimo ${selectedItem.value.available_quantity} unità disponibili ora`);
+                return;
+            }
+        } else {
+            // Item esaurito - permetti prenotazione solo con date valide
+            if (!form.start_date || !form.end_date) {
+                alert('Per articoli esauriti, specifica le date di prenotazione');
+                return;
+            }
+            
+            if (dateValidationMessage.value?.type === 'error') {
+                alert('Le date selezionate non sono valide per questo articolo');
+                return;
+            }
         }
         
         // Reset campi per purchase request
@@ -644,5 +1007,18 @@ watch(() => form.start_date, (newDate) => {
     if (newDate && form.end_date && form.end_date < newDate) {
         form.end_date = newDate
     }
+})
+
+// Watch for changes that require validation
+watch(() => [form.start_date, form.end_date, form.quantity_requested], () => {
+    if (form.request_type === 'existing_item' && selectedItem.value) {
+        validateDates()
+    }
+}, { deep: true })
+
+// Reset validation when item changes
+watch(() => form.item_id, () => {
+    availabilityValidation.value.result = null
+    dateValidationMessage.value = null
 })
 </script>

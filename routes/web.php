@@ -26,6 +26,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/requests', [WarehouseController::class, 'requests'])->name('requests');
         Route::get('/requests/create', [WarehouseController::class, 'createRequest'])->name('requests.create');
         Route::post('/requests', [WarehouseController::class, 'storeRequest'])->name('requests.store');
+        Route::post('/requests/validate-availability', [WarehouseController::class, 'validateAvailability'])->name('requests.validate-availability');
 
         // Admin only routes
         Route::middleware('can:admin-only')->group(function () {
