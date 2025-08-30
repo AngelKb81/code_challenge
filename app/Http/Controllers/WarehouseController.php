@@ -130,7 +130,7 @@ class WarehouseController extends Controller
     public function createRequest(): Response
     {
         $availabilityService = new \App\Services\ItemAvailabilityService();
-        
+
         // Mostra TUTTI gli item, non solo quelli disponibili
         $allItems = Item::where('status', 'available')
             ->where('quantity', '>', 0)
@@ -138,10 +138,10 @@ class WarehouseController extends Controller
             ->map(function ($item) use ($availabilityService) {
                 $startDate = \Carbon\Carbon::today();
                 $endDate = \Carbon\Carbon::today()->addDays(90); // Calcola per i prossimi 3 mesi
-                
+
                 $periods = $availabilityService->getAvailablePeriods($item, $startDate, $endDate);
                 $nextAvailable = $availabilityService->getNextAvailableDate($item);
-                
+
                 return [
                     'id' => $item->id,
                     'name' => $item->name,
@@ -185,16 +185,16 @@ class WarehouseController extends Controller
 
         $item = Item::findOrFail($request->item_id);
         $availabilityService = new \App\Services\ItemAvailabilityService();
-        
+
         $startDate = \Carbon\Carbon::parse($request->start_date);
         $endDate = \Carbon\Carbon::parse($request->end_date);
         $quantityRequested = $request->quantity_requested;
 
         // Verifica disponibilità per il periodo richiesto
         $isAvailable = $availabilityService->isAvailableForPeriod(
-            $item, 
-            $startDate, 
-            $endDate, 
+            $item,
+            $startDate,
+            $endDate,
             $quantityRequested
         );
 
@@ -215,11 +215,11 @@ class WarehouseController extends Controller
                 ->where(function ($query) use ($startDate, $endDate) {
                     $query->where(function ($q) use ($startDate, $endDate) {
                         $q->whereBetween('start_date', [$startDate, $endDate])
-                          ->orWhereBetween('end_date', [$startDate, $endDate])
-                          ->orWhere(function ($q2) use ($startDate, $endDate) {
-                              $q2->where('start_date', '<=', $startDate)
-                                 ->where('end_date', '>=', $endDate);
-                          });
+                            ->orWhereBetween('end_date', [$startDate, $endDate])
+                            ->orWhere(function ($q2) use ($startDate, $endDate) {
+                                $q2->where('start_date', '<=', $startDate)
+                                    ->where('end_date', '>=', $endDate);
+                            });
                     });
                 })
                 ->with('user')
@@ -242,7 +242,7 @@ class WarehouseController extends Controller
 
             $response['message'] = "Il periodo dal {$response['period']['start']} al {$response['period']['end']} non è disponibile per {$item->name}.";
             $response['conflicting_requests'] = $conflictingRequests;
-            
+
             if ($conflictingRequests->count() > 0) {
                 $response['message'] .= " Vedi le richieste esistenti per scegliere un periodo alternativo.";
             } else {
@@ -297,46 +297,46 @@ class WarehouseController extends Controller
         if ($validated['request_type'] === 'existing_item') {
             $item = Item::findOrFail($validated['item_id']);
             $availabilityService = new \App\Services\ItemAvailabilityService();
-            
+
             $startDate = \Carbon\Carbon::parse($validated['start_date']);
             $endDate = \Carbon\Carbon::parse($validated['end_date']);
             $quantityRequested = $validated['quantity_requested'];
 
             // Usa la stessa logica dell'endpoint di validazione
             $isAvailable = $availabilityService->isAvailableForPeriod(
-                $item, 
-                $startDate, 
-                $endDate, 
+                $item,
+                $startDate,
+                $endDate,
                 $quantityRequested
             );
 
             if (!$isAvailable) {
                 // Trova suggerimenti alternativi
                 $availablePeriods = $availabilityService->getAvailablePeriods(
-                    $item, 
-                    $startDate, 
+                    $item,
+                    $startDate,
                     $startDate->copy()->addDays(90)
                 );
 
                 $errorMessage = "Il periodo dal {$startDate->format('d/m/Y')} al {$endDate->format('d/m/Y')} non è disponibile per {$item->name}.";
-                
+
                 // Aggiungi suggerimenti se disponibili
                 if (!empty($availablePeriods['periods'])) {
                     $requestedDays = $startDate->diffInDays($endDate) + 1;
                     $suggestions = [];
-                    
+
                     foreach ($availablePeriods['periods'] as $period) {
                         $periodStart = \Carbon\Carbon::parse($period['start_date']);
                         $periodEnd = \Carbon\Carbon::parse($period['end_date']);
                         $periodDays = $periodStart->diffInDays($periodEnd) + 1;
-                        
+
                         if ($periodDays >= $requestedDays && $period['available_quantity'] >= $quantityRequested) {
                             $suggestions[] = $periodStart->format('d/m/Y') . ' - ' . min($periodEnd, $periodStart->copy()->addDays($requestedDays - 1))->format('d/m/Y');
                         }
-                        
+
                         if (count($suggestions) >= 3) break; // Limita a 3 suggerimenti
                     }
-                    
+
                     if (!empty($suggestions)) {
                         $errorMessage .= ' Periodi alternativi: ' . implode(', ', $suggestions);
                     }

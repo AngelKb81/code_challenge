@@ -155,7 +155,7 @@ class Item extends Model
         return 'available';
     }
 
-        /**
+    /**
      * Get the quantity available for immediate use (today).
      * Calculates based on requests that are currently active (overlapping with today).
      * Excludes purchase_request type as they add items to inventory rather than remove them.
@@ -163,7 +163,7 @@ class Item extends Model
     public function getAvailableQuantityAttribute(): int
     {
         $today = Carbon::today();
-        
+
         $currentlyUsedQuantity = $this->requests()
             ->where('status', 'approved')
             ->where('request_type', 'existing_item')

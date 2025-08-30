@@ -57,7 +57,7 @@ class ItemAvailabilityService
                 // Include richieste che si sovrappongono con il periodo di interesse
                 $query->where(function ($q) use ($startDate, $endDate) {
                     $q->where('start_date', '<=', $endDate)
-                      ->where('end_date', '>=', $startDate);
+                        ->where('end_date', '>=', $startDate);
                 });
             })
             ->get();
@@ -65,23 +65,23 @@ class ItemAvailabilityService
         // Crea una timeline giorno per giorno
         $timeline = [];
         $currentDate = $startDate->copy();
-        
+
         while ($currentDate->lte($endDate)) {
             $dateKey = $currentDate->format('Y-m-d');
             $usedQuantity = 0;
-            
+
             // Calcola quante unità sono occupate in questo giorno
             foreach ($approvedRequests as $request) {
                 $reqStart = Carbon::parse($request->start_date);
                 $reqEnd = Carbon::parse($request->end_date);
-                
+
                 // OPZIONE A: Item disponibile il giorno DOPO la data di fine
                 // Se questo giorno è compreso nella richiesta (ESCLUDENDO il giorno dopo la fine)
                 if ($currentDate->gte($reqStart) && $currentDate->lte($reqEnd)) {
                     $usedQuantity += $request->quantity_requested;
                 }
             }
-            
+
             $timeline[$dateKey] = max(0, $item->quantity - $usedQuantity);
             $currentDate->addDay();
         }
@@ -106,7 +106,7 @@ class ItemAvailabilityService
                             'available_quantity' => $currentAvailability
                         ];
                     }
-                    
+
                     // Inizia un nuovo periodo
                     $currentPeriodStart = $date;
                     $currentPeriodEnd = $date;
@@ -180,7 +180,7 @@ class ItemAvailabilityService
         $startDate = Carbon::today();
         $endDate = Carbon::today()->addDays(90);
         $periods = $this->getAvailablePeriods($item, $startDate, $endDate);
-        
+
         // Trova il primo periodo con disponibilità (escludendo oggi se ha 0 disponibilità)
         foreach ($periods['periods'] as $period) {
             $periodStart = Carbon::parse($period['start_date']);
@@ -192,7 +192,7 @@ class ItemAvailabilityService
                 return $periodStart;
             }
         }
-        
+
         return null;
     }
 
@@ -209,7 +209,7 @@ class ItemAvailabilityService
     {
         // Calcola la disponibilità giorno per giorno per il periodo richiesto
         $currentDate = $startDate->copy();
-        
+
         while ($currentDate->lte($endDate)) {
             $usedQuantity = $item->requests()
                 ->where('status', 'approved')
@@ -217,16 +217,16 @@ class ItemAvailabilityService
                 ->where('start_date', '<=', $currentDate)
                 ->where('end_date', '>=', $currentDate)
                 ->sum('quantity_requested');
-            
+
             $availableQuantity = max(0, $item->quantity - $usedQuantity);
-            
+
             if ($availableQuantity < $requestedQuantity) {
                 return false;
             }
-            
+
             $currentDate->addDay();
         }
-        
+
         return true;
     }
 }

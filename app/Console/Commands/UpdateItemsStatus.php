@@ -29,22 +29,24 @@ class UpdateItemsStatus extends Command
         $isDryRun = $this->option('dry-run');
 
         $this->info('🔄 Analyzing item statuses...');
+        $this->warn('Note: Status calculation currently returns "available" for all items.');
 
         $items = Item::all();
         $updatedCount = 0;
         $totalCount = $items->count();
 
-        $this->withProgressBar($items, function ($item) use (&$updatedCount, $isDryRun) {
+        $this->info("📊 Processing {$totalCount} items...");
+
+        foreach ($items as $item) {
             $currentStatus = $item->status;
             $calculatedStatus = $item->calculateStatus();
-            $availableQuantity = $item->getAvailableQuantity();
+            $availableQuantity = $item->getAvailableQuantityAttribute();
 
             if ($currentStatus !== $calculatedStatus) {
                 if (!$isDryRun) {
                     $item->update(['status' => $calculatedStatus]);
                 }
 
-                $this->newLine();
                 $this->info("📦 {$item->name}:");
                 $this->line("   Quantità totale: {$item->quantity}");
                 $this->line("   Quantità disponibile: {$availableQuantity}");
@@ -58,9 +60,9 @@ class UpdateItemsStatus extends Command
 
                 $updatedCount++;
             }
-        });
+        }
 
-        $this->newLine(2);
+        $this->newLine();
 
         if ($isDryRun) {
             $this->info("🔍 DRY RUN completato:");
