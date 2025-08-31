@@ -47,8 +47,8 @@
 
         <div class="py-12">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <!-- Stats Cards -->
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <!-- Stats Cards - Only for Admin Users -->
+                <div v-if="stats" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                     <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                         <div class="p-6">
                             <div class="flex items-center">
@@ -123,7 +123,7 @@
                 </div>
 
                 <!-- Quick Actions -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                <div class="mb-8">
                     <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                         <div class="p-6">
                             <h3 class="text-lg font-medium text-gray-900 mb-4">Azioni Rapide</h3>
@@ -166,27 +166,6 @@
                                         <span class="text-sm font-medium text-gray-900">Nuovo Articolo</span>
                                     </Link>
                                 </template>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Low Stock Alert -->
-                    <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                        <div class="p-6">
-                            <h3 class="text-lg font-medium text-gray-900 mb-4">Scorte Basse</h3>
-                            <div v-if="lowStockItems.length > 0" class="space-y-2">
-                                <div v-for="item in lowStockItems" :key="item.id" class="flex items-center justify-between p-2 bg-red-50 rounded-lg">
-                                    <div>
-                                        <p class="text-sm font-medium text-gray-900">{{ item.name }}</p>
-                                        <p class="text-xs text-gray-500">{{ item.brand }} - {{ item.category }}</p>
-                                    </div>
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                        {{ item.available_quantity || 0 }} disponibili di {{ item.quantity }}
-                                    </span>
-                                </div>
-                            </div>
-                            <div v-else class="text-sm text-gray-500">
-                                Nessuna scorta bassa rilevata
                             </div>
                         </div>
                     </div>
@@ -263,7 +242,6 @@ export default {
     props: {
         stats: Object,
         recentRequests: Array,
-        lowStockItems: Array,
     },
 
     methods: {

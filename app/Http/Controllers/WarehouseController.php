@@ -19,33 +19,30 @@ class WarehouseController extends Controller
      */
     public function index(): Response
     {
-        $stats = [
-            'totalItems' => Item::count(),
-            'availableItems' => Item::where('status', 'available')->count(),
-            'pendingRequests' => Request::where('status', 'pending')->count(),
-            'activeRequests' => Request::where('status', 'approved')->count(),
-        ];
+        // Show stats only to admin users
+        $stats = null;
+        if (Auth::user()->role === 'admin') {
+            $stats = [
+                'totalItems' => Item::count(),
+                'availableItems' => Item::where('status', 'available')->count(),
+                'pendingRequests' => Request::where('status', 'pending')->count(),
+                'activeRequests' => Request::where('status', 'approved')->count(),
+            ];
+        }
 
         // Get recent requests based on user role
         $recentRequestsQuery = Request::with(['user', 'item', 'approver'])->latest();
-        
+
         // If user is not admin, show only their own requests
         if (Auth::user()->role !== 'admin') {
             $recentRequestsQuery->where('user_id', Auth::id());
         }
-        
-        $recentRequests = $recentRequestsQuery->take(5)->get();
 
-        $lowStockItems = Item::where('status', 'available')
-            ->get()
-            ->filter(function ($item) {
-                return $item->getAvailableQuantity() <= 5 && $item->getAvailableQuantity() > 0;
-            });
+        $recentRequests = $recentRequestsQuery->take(5)->get();
 
         return Inertia::render('Warehouse/Dashboard', [
             'stats' => $stats,
             'recentRequests' => $recentRequests,
-            'lowStockItems' => $lowStockItems,
         ]);
     }
 
