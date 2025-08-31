@@ -239,7 +239,6 @@ class Request extends Model
     public static function hasOverlappingRequests($itemId, $startDate, $endDate, $excludeRequestId = null)
     {
         $query = self::where('item_id', $itemId)
-            ->where('request_type', 'existing_item')
             ->whereIn('status', ['approved', 'in_use'])
             ->where(function ($q) use ($startDate, $endDate) {
                 $q->whereBetween('start_date', [$startDate, $endDate])

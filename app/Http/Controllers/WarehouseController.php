@@ -312,6 +312,22 @@ class WarehouseController extends Controller
                 $quantityRequested
             );
 
+            // Controllo aggiuntivo per sovrapposizioni (requisito business)
+            // Per items con quantità = 1, non permettere sovrapposizioni
+            if ($item->quantity == 1) {
+                $hasOverlap = \App\Models\Request::hasOverlappingRequests(
+                    $item->id,
+                    $startDate->format('Y-m-d'),
+                    $endDate->format('Y-m-d')
+                );
+
+                if ($hasOverlap) {
+                    return redirect()->back()
+                        ->withInput()
+                        ->withErrors(['start_date' => "Il periodo dal {$startDate->format('d/m/Y')} al {$endDate->format('d/m/Y')} si sovrappone con una richiesta esistente per questo articolo (quantità singola)."]);
+                }
+            }
+
             if (!$isAvailable) {
                 // Trova suggerimenti alternativi
                 $availablePeriods = $availabilityService->getAvailablePeriods(
