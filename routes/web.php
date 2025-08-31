@@ -22,7 +22,7 @@ Route::middleware('auth')->group(function () {
 
     // Statistics Dashboard - Admin Only
     Route::middleware('can:admin-only')->group(function () {
-        Route::get('/statistics', [StatisticsController::class, 'index'])->name('statistics.index');
+        Route::get('/statistics', [StatisticsController::class, 'index'])->name('statistics');
     });
 
     // Warehouse routes

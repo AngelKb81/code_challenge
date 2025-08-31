@@ -17,7 +17,7 @@
                             <NavLink :href="route('dashboard')" :active="route().current('dashboard')">
                                 Dashboard
                             </NavLink>
-                            <NavLink v-if="$page.props.auth.user?.role === 'admin'" :href="route('statistics.index')" :active="route().current('statistics.*')">
+                            <NavLink v-if="$page.props.auth.user?.role === 'admin'" :href="route('statistics')" :active="route().current('statistics')">
                                 Statistiche
                             </NavLink>
                             <template v-if="$page.props.auth.user">
@@ -133,7 +133,7 @@
                     <ResponsiveNavLink :href="route('dashboard')" :active="route().current('dashboard')">
                         Dashboard
                     </ResponsiveNavLink>
-                    <ResponsiveNavLink v-if="$page.props.auth.user?.role === 'admin'" :href="route('statistics.index')" :active="route().current('statistics.*')">
+                    <ResponsiveNavLink v-if="$page.props.auth.user?.role === 'admin'" :href="route('statistics')" :active="route().current('statistics')">
                         Statistiche
                     </ResponsiveNavLink>
                     <template v-if="$page.props.auth.user">
