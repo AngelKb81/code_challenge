@@ -20,8 +20,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
 
-    // Statistics Dashboard
-    Route::get('/statistics', [StatisticsController::class, 'index'])->name('statistics.index');
+    // Statistics Dashboard - Admin Only
+    Route::middleware('can:admin-only')->group(function () {
+        Route::get('/statistics', [StatisticsController::class, 'index'])->name('statistics.index');
+    });
 
     // Warehouse routes
     Route::prefix('warehouse')->name('warehouse.')->group(function () {

@@ -35,6 +35,7 @@ class StatisticsController extends Controller
             'items' => $this->getItemStats($startDate, $endDate),
             'users' => $this->getUserStats($startDate, $endDate),
             'trends' => $this->getTrendStats($startDate, $endDate),
+            'chart_data' => $this->getDailyRequestChart($startDate, $endDate),
             'period' => [
                 'start' => $startDate->format('Y-m-d'),
                 'end' => $endDate->format('Y-m-d'),
@@ -42,7 +43,7 @@ class StatisticsController extends Controller
             ]
         ];
 
-        return Inertia::render('Statistics/Dashboard', [
+        return Inertia::render('Statistics/AdvancedDashboard', [
             'stats' => $stats,
             'filters' => [
                 'period' => $period,
