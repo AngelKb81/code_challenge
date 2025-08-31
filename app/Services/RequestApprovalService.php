@@ -151,15 +151,11 @@ class RequestApprovalService
         ];
     }
 
-    /**
-     * Reject pending requests that exceed available quantity.
-     */
     private function rejectExcessPendingRequests(Item $item, int $availableQuantity): array
     {
-        // Trova tutte le richieste pending per questo item
         $pendingRequests = Request::where('item_id', $item->id)
             ->where('status', 'pending')
-            ->orderBy('created_at', 'asc') // FIFO: prima arrivata, prima servita
+            ->orderBy('created_at', 'asc')
             ->get();
 
         $rejectedRequests = [];
