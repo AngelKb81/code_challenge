@@ -26,10 +26,15 @@ class WarehouseController extends Controller
             'activeRequests' => Request::where('status', 'approved')->count(),
         ];
 
-        $recentRequests = Request::with(['user', 'item', 'approver'])
-            ->latest()
-            ->take(5)
-            ->get();
+        // Get recent requests based on user role
+        $recentRequestsQuery = Request::with(['user', 'item', 'approver'])->latest();
+        
+        // If user is not admin, show only their own requests
+        if (Auth::user()->role !== 'admin') {
+            $recentRequestsQuery->where('user_id', Auth::id());
+        }
+        
+        $recentRequests = $recentRequestsQuery->take(5)->get();
 
         $lowStockItems = Item::where('status', 'available')
             ->get()
