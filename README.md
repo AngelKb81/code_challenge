@@ -507,24 +507,11 @@ code_challenge/
 Sviluppato da **Angelo Corbelli** come code challenge.
 
 ### Contatti
-- 📧 Email: angelocorbelli@example.com
-- 💼 LinkedIn: [Angelo Corbelli](https://linkedin.com/in/angelocorbelli)
+- 📧 Email: angelo.corbelli81@gmail.com
+- 💼 LinkedIn: [Angelo Corbelli](https://www.linkedin.com/in/angelo-corbelli-22bb0716b/)
 - 🐙 GitHub: [@AngelKb81](https://github.com/AngelKb81)
 
 ---
-
-## 📄 **LICENZA**
-
-Questo progetto è rilasciato sotto licenza MIT. Vedere il file `LICENSE` per dettagli.
-
----
-
-<p align="center">
-  <b>🎉 Progetto Code Challenge completato con successo!</b><br>
-  <i>Dimostra competenze full-stack moderne con Laravel 11, Vue 3 e Inertia.js</i>
-</p>
-
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
 
 ## Learning Laravel
 

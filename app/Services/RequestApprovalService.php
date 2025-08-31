@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Item;
 use App\Models\Request;
+use App\Services\ItemAvailabilityService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -101,15 +102,25 @@ class RequestApprovalService
             ];
         }
 
-        // Calcola quantità disponibile corrente
-        $currentAvailable = $item->getAvailableQuantity();
         $requestedQuantity = $request->quantity_requested ?? 1;
 
-        // Verifica disponibilità
-        if ($currentAvailable < $requestedQuantity) {
+        // Usa ItemAvailabilityService per controllo temporale accurato
+        $availabilityService = new ItemAvailabilityService();
+        $startDate = \Carbon\Carbon::parse($request->start_date);
+        $endDate = \Carbon\Carbon::parse($request->end_date);
+
+        $isAvailable = $availabilityService->isAvailableForPeriod(
+            $item,
+            $startDate,
+            $endDate,
+            $requestedQuantity
+        );
+
+        // Verifica disponibilità per il periodo specifico
+        if (!$isAvailable) {
             return [
                 'success' => false,
-                'message' => "Quantità insufficiente. Disponibili: {$currentAvailable}, Richieste: {$requestedQuantity}",
+                'message' => "Il periodo dal {$startDate->format('d/m/Y')} al {$endDate->format('d/m/Y')} non è disponibile per la quantità richiesta ({$requestedQuantity} unità).",
                 'rejected_requests' => []
             ];
         }
@@ -121,16 +132,7 @@ class RequestApprovalService
             'approved_at' => now(),
         ]);
 
-        // Calcola nuova quantità disponibile dopo l'approvazione
-        $newAvailable = $currentAvailable - $requestedQuantity;
-
-        // Gestisci richieste concorrenti se necessario
-        $rejectedRequests = [];
-        if ($newAvailable >= 0) {
-            $rejectedRequests = $this->rejectExcessPendingRequests($item, $newAvailable);
-        }
-
-        // Aggiorna status dell'item
+        // Aggiorna status dell'item (se necessario)
         $item->calculateAndUpdateStatus();
 
         // Log dell'operazione
@@ -138,15 +140,14 @@ class RequestApprovalService
             'request_id' => $request->id,
             'item_id' => $item->id,
             'admin_id' => $adminUserId,
-            'quantity_requested' => $requestedQuantity,
-            'available_after' => $newAvailable,
-            'rejected_requests' => count($rejectedRequests)
+            'period' => "{$startDate->format('Y-m-d')} to {$endDate->format('Y-m-d')}",
+            'quantity' => $requestedQuantity
         ]);
 
         return [
             'success' => true,
-            'message' => $this->buildSuccessMessage($request, $rejectedRequests),
-            'rejected_requests' => $rejectedRequests
+            'message' => "Richiesta approvata con successo per il periodo dal {$startDate->format('d/m/Y')} al {$endDate->format('d/m/Y')}!",
+            'rejected_requests' => []
         ];
     }
 
