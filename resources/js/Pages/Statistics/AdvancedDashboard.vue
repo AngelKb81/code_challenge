@@ -92,8 +92,8 @@
           />
         </div>
 
-        <!-- Charts Row 1: Request Trends and Status Distribution -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Charts Row 1: Request Trends -->
+        <div class="grid grid-cols-1 gap-8">
           <!-- Daily Request Chart -->
           <div class="bg-white rounded-lg shadow-lg p-6">
             <div class="flex items-center justify-between mb-6">
@@ -124,31 +124,6 @@
                   <strong>Giorno di picco:</strong> {{ stats.trends.peak_day.formatted_date }} 
                   ({{ stats.trends.peak_day.requests }} richieste)
                 </span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Request Status Donut Chart -->
-          <div class="bg-white rounded-lg shadow-lg p-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-6">Distribuzione Stati Richieste</h3>
-            <DonutChart
-              title="Stati delle Richieste"
-              :data="getRequestStatusData()"
-            />
-            
-            <!-- Status Summary -->
-            <div class="mt-6 grid grid-cols-3 gap-4 text-center">
-              <div class="p-3 bg-green-50 rounded-lg">
-                <div class="text-lg font-bold text-green-600">{{ stats?.requests?.approved || 0 }}</div>
-                <div class="text-xs text-green-800">Approvate</div>
-              </div>
-              <div class="p-3 bg-yellow-50 rounded-lg">
-                <div class="text-lg font-bold text-yellow-600">{{ stats?.requests?.pending || 0 }}</div>
-                <div class="text-xs text-yellow-800">In Attesa</div>
-              </div>
-              <div class="p-3 bg-red-50 rounded-lg">
-                <div class="text-lg font-bold text-red-600">{{ stats?.requests?.rejected || 0 }}</div>
-                <div class="text-xs text-red-800">Rifiutate</div>
               </div>
             </div>
           </div>
@@ -308,57 +283,6 @@
           </div>
         </div>
 
-        <!-- Additional Insights -->
-        <div class="bg-white rounded-lg shadow-lg p-6">
-          <h3 class="text-lg font-semibold text-gray-900 mb-6">📈 Insights e Raccomandazioni</h3>
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            
-            <!-- Performance Insight -->
-            <div class="p-4 border border-blue-200 rounded-lg bg-blue-50">
-              <div class="flex items-center mb-2">
-                <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                </svg>
-                <span class="font-semibold text-blue-800">Performance</span>
-              </div>
-              <div class="text-sm text-blue-700">
-                Tasso di approvazione del {{ stats?.requests?.approval_percentage || 0 }}% 
-                {{ (stats?.requests?.approval_percentage || 0) > 80 ? '- Eccellente!' : 
-                   (stats?.requests?.approval_percentage || 0) > 60 ? '- Buono' : '- Da migliorare' }}
-              </div>
-            </div>
-
-            <!-- Efficiency Insight -->
-            <div class="p-4 border border-green-200 rounded-lg bg-green-50">
-              <div class="flex items-center mb-2">
-                <svg class="w-5 h-5 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                </svg>
-                <span class="font-semibold text-green-800">Efficienza</span>
-              </div>
-              <div class="text-sm text-green-700">
-                Utilizzo medio articoli: {{ stats?.items?.average_item_utilization || 0 }}%
-                {{ (stats?.items?.average_item_utilization || 0) > 70 ? '- Ottimo utilizzo!' : 
-                   (stats?.items?.average_item_utilization || 0) > 40 ? '- Utilizzo moderato' : '- Sottoutilizzato' }}
-              </div>
-            </div>
-
-            <!-- Inventory Alert -->
-            <div class="p-4 border border-orange-200 rounded-lg bg-orange-50">
-              <div class="flex items-center mb-2">
-                <svg class="w-5 h-5 mr-2 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
-                </svg>
-                <span class="font-semibold text-orange-800">Inventario</span>
-              </div>
-              <div class="text-sm text-orange-700">
-                {{ stats?.items?.items_never_requested || 0 }} articoli mai richiesti
-                {{ (stats?.items?.items_never_requested || 0) > 0 ? '- Considera la rimozione o promozione' : '- Tutti gli articoli sono utilizzati!' }}
-              </div>
-            </div>
-          </div>
-        </div>
-
       </div>
     </div>
 
@@ -414,39 +338,6 @@ const getRequestsTrend = () => {
 }
 
 // Chart data formatters
-const getRequestStatusData = () => {
-  if (!props.stats?.requests) return []
-  
-  const data = []
-  const requests = props.stats.requests
-  
-  if (requests.approved > 0) {
-    data.push({
-      label: 'Approvate',
-      value: requests.approved,
-      color: '#10b981'
-    })
-  }
-  
-  if (requests.pending > 0) {
-    data.push({
-      label: 'In Attesa',
-      value: requests.pending,
-      color: '#f59e0b'
-    })
-  }
-  
-  if (requests.rejected > 0) {
-    data.push({
-      label: 'Rifiutate',
-      value: requests.rejected,
-      color: '#ef4444'
-    })
-  }
-  
-  return data
-}
-
 const getCategoryData = () => {
   if (!props.stats?.items?.by_category) return []
   
