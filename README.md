@@ -21,8 +21,6 @@ Questa repository contiene un sistema di gestione magazzino enterprise-ready con
 - **✅ Credenziali di test** - Login admin/user inclusi per testing immediato
 - **✅ Documentation completa** - Architettura, funzionalità e API
 
-**📋 Vedi [DELIVERY_GUIDE.md](./DELIVERY_GUIDE.md) per dettagli consegna**
-
 ---
 
 ## 🎯 **Panoramica Progetto**
@@ -256,20 +254,6 @@ npm run start
 - `CreateItem.vue` - Form creazione
 - `EditItem.vue` - Form modifica
 - `AuthenticatedLayout.vue` - Layout base
-
----
-
-## � **Documentazione Completa**
-
-Per approfondimenti tecnici dettagliati, decisioni architetturali e specifiche implementative:
-
-- **[📋 TECHNICAL_DOCS.md](./TECHNICAL_DOCS.md)** - Documentazione tecnica completa
-  - Analisi dettagliata Quantity-Based vs Asset-Based approach
-  - Giustificazioni delle scelte architetturali 
-  - Matrice di decisione e trade-offs
-  - Schema database e relazioni
-  - Performance e ottimizzazioni
-  - Percorsi di migrazione futura
 
 ---
 
