@@ -59,7 +59,7 @@
       <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-8">
         
         <!-- Overview Cards with Trends -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <StatCard
             title="Totale Articoli"
             :value="stats?.overview?.total_items || 0"
@@ -82,13 +82,6 @@
             subtitle="nel periodo"
             icon="users"
             color="purple"
-          />
-          <StatCard
-            title="Tasso Approvazione"
-            :value="`${stats?.requests?.approval_percentage || 0}%`"
-            subtitle="delle richieste"
-            icon="check-circle"
-            color="green"
           />
         </div>
 
